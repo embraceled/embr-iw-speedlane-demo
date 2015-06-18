@@ -48,13 +48,13 @@ handler.setFormatter(formatter)
 # add handler to logger
 logger.addHandler(handler)
 
-class EmbrSlStart():
+class EmbrSlFinish():
     # Init
     def __init__(self, **redis_kwargs):
         self.stdin_path = '/dev/null'
-        self.stdout_path = '/dev/tty' # '/var/log/embr-sl-start-daemon-out.log'
-        self.stderr_path = '/dev/tty' # '/var/log/embr-sl-start-daemon-err.log'
-        self.pidfile_path =  '/tmp/sensorDeamon.pid'
+        self.stdout_path = '/dev/tty' # '/var/log/embr-sl-finish-daemon-out.log'
+        self.stderr_path = '/dev/tty' # '/var/log/embr-sl-finish-daemon-err.log'
+        self.pidfile_path =  '/tmp/sensorFinishDeamon.pid'
         self.pidfile_timeout = 5
 
         #timers
@@ -76,7 +76,7 @@ class EmbrSlStart():
     def run(self):
         self.setSerial(0)
         #self.fireItUp(0)
-        logger.info('Starting Iceworld start daemon')
+        logger.info('Starting Iceworld finish daemon')
 
 
     def setSerial(self, it):
@@ -162,7 +162,7 @@ class EmbrSlStart():
 
 # fire up daemon
 try:
-    app = EmbrSlStart()
+    app = EmbrSlFinish()
     daemon_runner = runner.DaemonRunner(app)
     daemon_runner.daemon_context.files_preserve=[handler.stream]
     daemon_runner.do_action()
