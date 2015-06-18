@@ -128,7 +128,7 @@ class EmbrSlStart():
                     self.read_chars = self.ser.read(self.ser.inWaiting())
 
                     #check if valid and then get message.
-                    if self.read_chars[1]=='\x0a':
+                    if self.read_chars[1]=='\x25':
                         ts = "%.0f" % time.time()
                         hex = ''
                         for aChar in range(5,1,-1):
