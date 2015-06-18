@@ -1,0 +1,14 @@
+.container
+  .footer
+    hr(style='margin: 30px 0 10px 0;')
+    p &copy;&nbsp;
+      a(href='http://embraceled.com') Embraceled Interactions B.V.
+      | - #{moment().format('YYYY')}
+
+script(src='/bower_components/jquery/dist/jquery.min.js')
+script(src='/bower_components/bootstrap/dist/js/bootstrap.min.js')
+script(src='/bower_components/jquery-runner/build/jquery.runner-min.js')
+script(type='text/javascript', src='/socket.io/socket.io.js')
+script(type='text/javascript', src='/js/socket.js')
+
+block footer

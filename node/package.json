@@ -7,6 +7,19 @@
   "contributors": [
     "Robert van Geerenstein <robert@embraceled.com>"
   ],
+  "keywords": [
+    "embraceled",
+    "iceworld",
+    "speedlane",
+    "demo"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://bitbucket.org/wecothi/embr-iw-speedlane-demo.git"
+  },
+  "homepage": "https://bitbucket.org/wecothi/embr-iw-speedlane-demo#readme",
+  "license": "ISC",
+  "main": "app.js",
   "dependencies": {
     "MD5": "^1.2.1",
     "body-parser": "^1.9.0",
@@ -15,9 +28,14 @@
     "hiredis": "^0.1.17",
     "jade": "^1.7.0",
     "js-yaml": "3.1.0",
+    "moment": "^2.10.3",
     "morgan": "^1.3.2",
     "redis": "^0.12.1",
     "serve-favicon": "^2.1.5",
     "socket.io": "^1.1.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
   }
 }

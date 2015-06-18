@@ -1,0 +1,33 @@
+{
+  "name": "embr-iw-speedlane-demo",
+  "version": "0.0.1",
+  "authors": [
+    "Robert van Geerenstein <robert@embraceled.com>"
+  ],
+  "description": "Iceworld speedlane demo",
+  "main": "app.js",
+  "moduleType": [
+    "node"
+  ],
+  "keywords": [
+    "embraceled",
+    "iceworld",
+    "speedlane",
+    "demo"
+  ],
+  "license": "MIT",
+  "homepage": "http://embraceled.com",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.4",
+    "bootstrap": "~3.3.5",
+    "font-awesome": "~4.3.0",
+    "jquery-runner": "~2.3.3"
+  }
+}

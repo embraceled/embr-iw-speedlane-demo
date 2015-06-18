@@ -1,0 +1,34 @@
+extends layout
+
+block content
+  div.container
+    div.row
+      div.col-md-6
+        h3 Current race
+        div(id='counter')
+
+      div.col-md-6
+        h3 Scores
+        table(class='table table-striped')
+          thead
+            tr
+              th #
+              th Name
+              th Time
+          tbody(id='scores')
+            for score, index in scores
+              tr
+                td= index + 1
+                td= score.user.full_name
+                td= score.time
+
+
+  div.modal(id="disconnectedModal")
+    .modal-dialog
+      .modal-content
+        .modal-header
+          h3 Disconnected
+        .modal-body
+          p It seems that the server disconnected.
+          | Try refreshing the page if it doesn't come back up again.
+        .modal-footer
