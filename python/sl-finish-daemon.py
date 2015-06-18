@@ -64,7 +64,7 @@ class EmbrSlStart():
         self.cycles = self.time/self.sampleTime  -1 # number of cycles wait
 
         # keys
-        self.redisKey = 'embr:sl:start'
+        self.redisKey = 'embr:sl:finish'
 
         # app ident
         self.version = 'Rasberry Pi, Raspbian Embraceled Mod, v1.0.0' # TODO fetch this from image
@@ -140,7 +140,7 @@ class EmbrSlStart():
                     self.read_chars = self.ser.read(self.ser.inWaiting())
                     
                     #check if valid and then get message.
-                    if self.read_chars[0]=='\x25':
+                    if self.read_chars[0]=='\x30':
                         ts = "%.0f" % time.time()
                         hex = ''
                         for aChar in range(1,5,1):
