@@ -18,11 +18,11 @@ sudo apt-get install python-netifaces
 sudo apt-get install python-requests
 
 # install node/npm
-apt-get install -y curl git
+sudo apt-get install -y curl git
 curl -sL https://deb.nodesource.com/setup | sudo bash -
-apt-get install -y nodejs
-apt-get install -y build-essential
+sudo apt-get install -y nodejs
+sudo apt-get install -y build-essential
 
 # install pm2
 sudo npm install -g pm2 --unsafe-perm
-
+sudo npm install -g bower
