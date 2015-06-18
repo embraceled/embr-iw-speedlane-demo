@@ -27,7 +27,7 @@ from serial.serialutil import SerialException
 POOL = redis.ConnectionPool(host='127.0.0.1', port=6379, db=0)
 
 # Setup proper logging
-LOG_FILENAME = '/var/log/embr-sl-start-daemon.log'
+LOG_FILENAME = '/var/log/embr-sl-finish-daemon.log'
 
 logger = logging.getLogger('EbmrSensorLogger')
 logger.setLevel(logging.INFO)
