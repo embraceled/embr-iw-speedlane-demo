@@ -91,8 +91,8 @@ class EmbrSlStart():
             if it >= 10:
                 it = 0
             self.setSerial(it)
-		else:
-			self.fireItUp(self,it)
+        else:
+            self.fireItUp(self,it)
 
 
     def fireItUp(self,it):
@@ -106,13 +106,13 @@ class EmbrSlStart():
             if len(self.read_chars)==30:
                 if self.read_chars[21:25]=='FF01':
                     self.runStart()
-					time.sleep(1)
-				else:
                     time.sleep(1)
-					it = it+1
-					if it >= 10:
-						it = 0
-					self.setSerial(it)
+                else:
+                    time.sleep(1)
+                    it = it+1
+                    if it >= 10:
+                        it = 0
+                    self.setSerial(it)
         
 
 
