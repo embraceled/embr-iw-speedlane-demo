@@ -113,7 +113,7 @@ class EmbrSlStart():
                     if it >= 10:
                         it = 0
                     self.setSerial(it)
-        
+
 
 
     # handle IOError
@@ -135,7 +135,7 @@ class EmbrSlStart():
                 # read loop
                 if self.ser.inWaiting() != 0:
                     self.read_chars = self.ser.read(self.ser.inWaiting())
-                    
+
                     #check if valid and then get message.
                     if self.read_chars[0]=='\x25':
                         ts = "%.0f" % time.time()

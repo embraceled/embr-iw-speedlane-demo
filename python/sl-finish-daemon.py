@@ -109,14 +109,14 @@ class EmbrSlFinish():
                 logger.info('hier')
                 if self.read_chars[21:25]=='FF02':
                     self.runStart()
-                    logger.info('meuk')    
+                    logger.info('meuk')
                 else:
                     time.sleep(1)
                     it = it +1
                     if it>=10:
                         it=0
-                    self.setSerial(it) 
-        
+                    self.setSerial(it)
+
 
 
     # handle IOError
@@ -138,7 +138,7 @@ class EmbrSlFinish():
                 # read loop
                 if self.ser.inWaiting() != 0:
                     self.read_chars = self.ser.read(self.ser.inWaiting())
-                    
+
                     #check if valid and then get message.
                     if self.read_chars[0]=='\x30':
                         ts = "%.0f" % time.time()
