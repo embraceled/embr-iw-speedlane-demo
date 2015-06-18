@@ -107,7 +107,7 @@ class EmbrSlStart():
             logger.info('00 %s',self.read_chars)
             if len(self.read_chars)==30:
                 logger.info('hier')
-                if self.read_chars[21:25]=='FF01':
+                if self.read_chars[21:25]=='FF02':
                     self.runStart()
                     logger.info('meuk')
 		    time.sleep(1)
