@@ -107,7 +107,8 @@ class EmbrSlStart():
                 if self.read_chars[21:25]=='FF01':
                     self.runStart()
 					time.sleep(1)
-				else
+				else:
+                    time.sleep(1)
 					it = it+1
 					if it >= 10:
 						it = 0
