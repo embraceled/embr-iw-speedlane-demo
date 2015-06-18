@@ -75,7 +75,7 @@ class EmbrSlStart():
 
     def run(self):
         self.setSerial(0)
-        self.fireItUp()
+        #self.fireItUp(0)
         logger.info('Starting Iceworld start daemon')
 
 
@@ -91,9 +91,11 @@ class EmbrSlStart():
             if it >= 10:
                 it = 0
             self.setSerial(it)
+		else:
+			self.fireItUp(self,it)
 
 
-    def fireItUp(self):
+    def fireItUp(self,it):
         #get ident to set mode
         self.ser.write('i')
         time.sleep(self.idResponseTime)
@@ -102,9 +104,15 @@ class EmbrSlStart():
         if self.ser.inWaiting() > 0:
             self.read_chars = self.ser.read(self.ser.inWaiting())
             if len(self.read_chars)==30:
-                if self.read_chars[21:25]=='F002':
-                    method='like'
-        self.runStart()
+                if self.read_chars[21:25]=='FF01':
+                    self.runStart()
+					time.sleep(1)
+				else
+					it = it+1
+					if it >= 10:
+						it = 0
+					self.setSerial(it)
+        
 
 
     # handle IOError
@@ -126,12 +134,12 @@ class EmbrSlStart():
                 # read loop
                 if self.ser.inWaiting() != 0:
                     self.read_chars = self.ser.read(self.ser.inWaiting())
-
+                    
                     #check if valid and then get message.
-                    if self.read_chars[1]=='\x25':
+                    if self.read_chars[0]=='\x25':
                         ts = "%.0f" % time.time()
                         hex = ''
-                        for aChar in range(5,1,-1):
+                        for aChar in range(1,5,1):
                             a1 = "%02X" % ord(self.read_chars[aChar])
                             hex = hex + a1
 
