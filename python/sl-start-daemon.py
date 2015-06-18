@@ -92,7 +92,7 @@ class EmbrSlStart():
                 it = 0
             self.setSerial(it)
         else:
-            self.fireItUp(self,it)
+            self.fireItUp(it)
 
 
     def fireItUp(self,it):
