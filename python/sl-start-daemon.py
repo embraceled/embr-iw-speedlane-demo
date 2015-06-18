@@ -104,7 +104,7 @@ class EmbrSlStart():
             if len(self.read_chars)==30:
                 if self.read_chars[21:25]=='F002':
                     method='like'
-        runStart()
+        self.runStart()
 
 
     # handle IOError
