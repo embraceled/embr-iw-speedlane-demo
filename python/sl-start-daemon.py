@@ -139,7 +139,7 @@ class EmbrSlStart():
                         if hex != hex_old or round(time.time() - ts_old) > 5:
                             try:
                                 r = redis.Redis(connection_pool=POOL)
-                                r.rpush(self.redisKey,json.dumps({'braceletId':hex,'ts':ts}))
+                                r.publish(self.redisKey,json.dumps({'braceletId':hex,'ts':ts}))
                                 hex_old = hex
                                 ts_old = time.time()
                             except redis.ConnectionError:
