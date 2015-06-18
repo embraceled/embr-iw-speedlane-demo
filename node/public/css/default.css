@@ -1,1 +1,7 @@
 body { padding-top: 60px; }
+
+#counter {
+    margin: 0 auto;
+    text-align: center;
+    font-size: 80px;
+}

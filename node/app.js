@@ -17,6 +17,7 @@ var favicon    = require('serve-favicon');
 //var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var md5        = require('MD5');
+var Stopwatch  = require('timer-stopwatch');
 
 process.env.PORT = config.port || process.env.PORT;
 
@@ -88,27 +89,13 @@ app.locals.moment = require('moment');
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-// require('./routes')(app); // var routes = require('./routes/routes'); app.use('/', routes);
-
-app.get('/', function(req, res){
-  // get redis list of current scores
-  redisClient.zrange('embr:sl:scores', 0, 10,'withscores', function(err, rs) {
-    if (err) {
-      console.log(err);
-      res.send(500);
-    }
-
-    // it returns an array with strings.
-    // convert to json objects
-    for (var a in rs) {
-      rs[a] = JSON.parse(rs[a]);
-    }
-
+app.get('/', function(req, res) {
+  getScoreList(function(rs) {
     res.render('index', {
       title : 'Iceworld scores',
       scores : rs
     });
-  });
+  })
 });
 
 
@@ -131,8 +118,11 @@ io.on('connection', function(socket) {
 
   // socket connect here
   socket.on('connected', function(data) {
-
     console.log('Connected: ' + data);
+  });
+
+  socket.on('start', function(data) {
+    startRace(data);
   });
 
   socket.on('disconnect', function() {
@@ -145,81 +135,122 @@ io.on('connection', function(socket) {
 
 
 
-// ////////////////////////////////////////////////////////////////////////////////
-// //
-// // REDIS SUBSCRIBE HANDLERS
-// //
-// ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+//
+// RACE FOO
+//
+////////////////////////////////////////////////////////////////////////////////
 
-// define activeRace var
-var activeRace;
+var raceState = false;
 var raceInfo = {};
+var raceTimer = 0;
+var users = [];
 
-// redisSubClient.on("message", function(channel, message) {
-//   message = JSON.parse(message);
-//   if (channel == 'embr:events:pub') {
+var getUsers =  function() {
+  redisClient.get('embr:sl:users', function(err, rs) {
+    if (err) {
+      console.log(err);
+      res.send(500);
+    }
 
-//     if (message.type == 'event') {
-//       // when eventId is set, it's been deactivated emit to active room
-//       if (typeof message.eventId != 'undefined' && parseInt(message.eventId) > 0) {
-//         // get roomHash and trigger over
-//         redisClient.get('RoomHash:' + message.eventId, function(err, roomHash) {
-//           io.in(roomHash).emit('over');
-//         });
-//       }
-//       // otherwise nothing special
-
-//     // nodes were updated
-//     } else if (message.type == 'nodes') {
-//       // trigger full update, nodes might be added/removed
-//       fullUpdateRoom(message.eventId);
-//     }
-//   }
-// });
-
-// // like/poll updates
-// // for now this is combined, just make it work :P
-// redisSubClient.on("pmessage", function(pattern, channel, message) {
-//   message = JSON.parse(message);
-
-//   // fetch node and current counts
-//   var commandList = getRedisCountReadCommands(message.eventId, [message.deviceSerial]);
-
-//   redisClient.multi(commandList).exec(function(err, counts) {
-
-//     redisClient.get('embr:active:nodes:' + message.deviceSerial, function(err, node) {
-//       node = JSON.parse(node);
-//       // attach counts
-//       for (var c = 0, k = 0, n = 0, countLen = counts.length; c < countLen; c++, k++) {
-//         var cv = counts[c];
-
-//         // set count vars
-//         if (typeof node.counts == 'undefined') {
-//           node.counts = [];
-//         }
-//         node.counts[k] = cv
-//       }
-
-//       redisClient.get('RoomHash:' + message.eventId, function(err, roomHash) {
-//         io.in(roomHash).emit('update', node);
-//       });
-//     });
-//   });
-// });
+    users = JSON.parse(rs);
+    // console.log(users);
+  });
+};
 
 
-// // subscribe to nodes, events
-// redisSubClient.subscribe('embr:events:pub');
-// // for now combine these
-// redisSubClient.psubscribe('embr:*:pub:*'); // embr:1:pub:like / embr:1:pub:poll
+var getScoreList = function(cb) {
+
+  // get redis list of current scores
+  // redisClient.zrange('embr:sl:scores', 0, 10, 'withscores', function(err, rs) {
+  redisClient.zrange('embr:sl:scores', 0, 10, function(err, rs) {
+    if (err) {
+      console.log(err);
+      res.send(500);
+    }
+
+    // it returns an array with strings.
+    // convert to json objects
+    for (var a in rs) {
+      rs[a] = JSON.parse(rs[a]);
+    }
+
+    console.log(rs);
+
+    cb(rs);
+  });
+};
+
+var handleStart = function(message)
+{
+  raceState = true;
+
+  console.log('start message:');
+  console.log(message);
+  console.log(message.braceletId);
+
+  // fetch user
+  io.emit('start', users[message.braceletId]);
+};
+
+var startRace = function(data)
+{
+  // start timer here
+};
+
+var handleFinish = function(message)
+{
+  raceState = false;
+  console.log('finish message:');
+  console.log(message);
+
+  // stop timer hee
+
+  // add to scores
+
+  io.emit('finish', [{'user' : {'full_name' : 'Robert van Geerenstein'}, 'time' : 14}]);
+  // getScoreList(function() {io.emit('finish', rs)});
+}
 
 
-// // For some reason we got:
-// // TypeError: Uncaught, unspecified "error" event.
-// process.on('uncaughtException', function(err) {
-//   console.log('uncaughtException');
-//   console.log(err);
-// });
+// load user list db woot
+getUsers();
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// REDIS SUBSCRIBE HANDLERS
+//
+////////////////////////////////////////////////////////////////////////////////
+
+redisSubClient.on("message", function(channel, message) {
+  message = JSON.parse(message);
+
+  switch (channel) {
+    case 'embr:sl:start':
+      // if (raceState) break;
+      handleStart(message);
+      break
+    case 'embr:sl:finish':
+      if ( ! raceState) break;
+      handleFinish(message);
+      break
+  }
+});
+
+// subscribe
+redisSubClient.subscribe('embr:sl:start');
+redisSubClient.subscribe('embr:sl:finish');
+
+
+
+// For some reason we got:
+// TypeError: Uncaught, unspecified "error" event.
+process.on('uncaughtException', function(err) {
+  console.log('uncaughtException');
+  console.log(err);
+});
 
 ////////////////////////////////////////////////////////////////////////////////
 //

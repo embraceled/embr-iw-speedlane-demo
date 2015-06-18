@@ -1,0 +1,22 @@
+[
+    {
+        "user" : {
+            "bracelet_id" : "00001234",
+            "first_name" : "Robert",
+            "last_name" : "van Geerenstein",
+            "full_name" : "Robert van Geerenstein",
+            "gender" : "male"
+        },
+        "time" : 44.56
+    },
+    {
+        "user" : {
+            "bracelet_id" : "00001235",
+            "first_name" : "Ralf",
+            "last_name" : "Ekkelenkamp",
+            "full_name" : "Ralf Ekkelenkamp",
+            "gender" : "male"
+        },
+        "time" : 45.51
+    }
+]
