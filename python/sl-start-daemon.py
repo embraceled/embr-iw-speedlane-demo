@@ -54,7 +54,7 @@ class EmbrSlStart():
         self.stdin_path = '/dev/null'
         self.stdout_path = '/dev/tty' # '/var/log/embr-sl-start-daemon-out.log'
         self.stderr_path = '/dev/tty' # '/var/log/embr-sl-start-daemon-err.log'
-        self.pidfile_path =  '/tmp/sensorDeamon.pid'
+        self.pidfile_path =  '/tmp/sensorStartDeamon.pid'
         self.pidfile_timeout = 5
 
         #timers
