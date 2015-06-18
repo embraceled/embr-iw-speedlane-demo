@@ -52,8 +52,8 @@ class EmbrSlStart():
     # Init
     def __init__(self, **redis_kwargs):
         self.stdin_path = '/dev/null'
-        self.stdout_path = '/var/log/embrSensorDaemon_out.log' # '/dev/tty'
-        self.stderr_path = '/var/log/embrSensorDaemon_err.log' # '/dev/tty'
+        self.stdout_path = '/dev/tty' # '/var/log/embr-sl-start-daemon-out.log'
+        self.stderr_path = '/dev/tty' # '/var/log/embr-sl-start-daemon-err.log'
         self.pidfile_path =  '/tmp/sensorDeamon.pid'
         self.pidfile_timeout = 5
 
@@ -139,7 +139,7 @@ class EmbrSlStart():
                         if hex != hex_old or round(time.time() - ts_old) > 5:
                             try:
                                 r = redis.Redis(connection_pool=POOL)
-                                r.rpush(self.redisLikeKey,json.dumps({'braceletId':hex,'ts':ts}))
+                                r.rpush(self.redisKey,json.dumps({'braceletId':hex,'ts':ts}))
                                 hex_old = hex
                                 ts_old = time.time()
                             except redis.ConnectionError:
