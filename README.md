@@ -17,3 +17,13 @@ Go to ./bin and run $ ./stop to stop the python daemons and the node application
 
 
 Do not edit anything in either node_modules or public/bower_components, these will be overwritten automagically.
+
+
+
+
+for the noobs:
+
+redis monitor
+
+redis-cli 
+monitor
