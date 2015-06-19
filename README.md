@@ -21,7 +21,7 @@ Do not edit anything in either node_modules or public/bower_components, these wi
 
 
 
-for the noobs:
+for the noobs(for me jeroendl):
 
 redis monitor
 
