@@ -54,7 +54,7 @@ class EmbrSlFinish2():
         self.stdin_path = '/dev/null'
         self.stdout_path = '/dev/tty' # '/var/log/embr-sl-finish-daemon-out.log'
         self.stderr_path = '/dev/tty' # '/var/log/embr-sl-finish-daemon-err.log'
-        self.pidfile_path =  '/tmp/sensorFinishDeamon.pid'
+        self.pidfile_path =  '/tmp/sensorFinishDeamon2.pid'
         self.pidfile_timeout = 5
 
         #timers
@@ -109,7 +109,7 @@ class EmbrSlFinish2():
             if len(self.read_chars)==30:
                 logger.info('hier')
                 if self.read_chars[21:25]=='FF03':
-                    logger.info('FF02 found')
+                    logger.info('FF03 found')
                     self.runStart()                    
         time.sleep(1)
         it = it +1

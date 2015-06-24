@@ -54,7 +54,7 @@ class EmbrSlFinish1():
         self.stdin_path = '/dev/null'
         self.stdout_path = '/dev/tty' # '/var/log/embr-sl-finish-daemon-out.log'
         self.stderr_path = '/dev/tty' # '/var/log/embr-sl-finish-daemon-err.log'
-        self.pidfile_path =  '/tmp/sensorFinishDeamon.pid'
+        self.pidfile_path =  '/tmp/sensorFinishDeamon1.pid'
         self.pidfile_timeout = 5
 
         #timers
