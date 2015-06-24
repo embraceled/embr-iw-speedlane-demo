@@ -79,7 +79,7 @@ class EmbrSlStart():
         logger.info('Starting Iceworld start daemon')
 
 
-    def setSerial(self, it):
+   def setSerial(self, it):
         #get serial port 100% on ttyACM0 on clean boot but to help with debugging:
         try:
             tty = '/dev/ttyACM' + str(it)
@@ -92,10 +92,12 @@ class EmbrSlStart():
                 it = 0
             self.setSerial(it)
         else:
+            logger.info('found proper port')
             self.fireItUp(it)
 
 
     def fireItUp(self,it):
+        logger.info('startFireItUp')
         #get ident to set mode
         self.ser.write('i')
         time.sleep(self.idResponseTime)
@@ -103,16 +105,17 @@ class EmbrSlStart():
         method = ''
         if self.ser.inWaiting() > 0:
             self.read_chars = self.ser.read(self.ser.inWaiting())
+            logger.info('00 %s',self.read_chars)
             if len(self.read_chars)==30:
+                logger.info('hier')
                 if self.read_chars[21:25]=='FF01':
-                    self.runStart()
-                    time.sleep(1)
-        else:
-            time.sleep(1)
-            it = it+1
-            if it >= 10:
-                it = 0
-            self.setSerial(it)
+                    logger.info('FF01 found')
+                    self.runStart()                    
+        time.sleep(1)
+        it = it +1
+        if it>=10:
+            it=0
+        self.setSerial(it)
 
 
 
