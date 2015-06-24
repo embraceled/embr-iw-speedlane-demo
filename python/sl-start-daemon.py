@@ -108,9 +108,10 @@ class EmbrSlStart():
             logger.info('00 %s',self.read_chars)
             if len(self.read_chars)==30:
                 logger.info('hier')
-                if self.read_chars[21:25]=='FF01':
-                    logger.info('FF01 found')
-                    self.runStart()                    
+                if 'Embraceled' in self.read_chars:
+                    if 'FF01' in self.read_chars:
+                        logger.info('FF01 found')
+                        self.runStart()                    
         time.sleep(1)
         it = it +1
         if it>=10:
