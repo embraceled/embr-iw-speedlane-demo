@@ -48,7 +48,7 @@ handler.setFormatter(formatter)
 # add handler to logger
 logger.addHandler(handler)
 
-class EmbrSlFinish():
+class EmbrSlFinish1():
     # Init
     def __init__(self, **redis_kwargs):
         self.stdin_path = '/dev/null'
@@ -162,7 +162,7 @@ class EmbrSlFinish():
 
 # fire up daemon
 try:
-    app = EmbrSlFinish()
+    app = EmbrSlFinish1()
     daemon_runner = runner.DaemonRunner(app)
     daemon_runner.daemon_context.files_preserve=[handler.stream]
     daemon_runner.do_action()
