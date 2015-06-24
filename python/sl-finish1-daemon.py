@@ -106,11 +106,10 @@ class EmbrSlFinish1():
         if self.ser.inWaiting() > 0:
             self.read_chars = self.ser.read(self.ser.inWaiting())
             logger.info('00 %s',self.read_chars)
-            if len(self.read_chars)==30:
-                logger.info('hier')
-                if 'FF02' in self.read_chars:
-                    logger.info('FF02 found')
-                    self.runStart()                    
+            logger.info('hier')
+            if 'FF02' in self.read_chars:
+                logger.info('FF02 found')
+                self.runStart()                    
         time.sleep(1)
         it = it +1
         if it>=10:
