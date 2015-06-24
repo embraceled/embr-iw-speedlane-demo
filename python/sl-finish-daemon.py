@@ -92,6 +92,7 @@ class EmbrSlFinish():
                 it = 0
             self.setSerial(it)
         else:
+            logger.info(')
             self.fireItUp(it)
 
 
@@ -108,14 +109,13 @@ class EmbrSlFinish():
             if len(self.read_chars)==30:
                 logger.info('hier')
                 if self.read_chars[21:25]=='FF02':
-                    self.runStart()
-                    logger.info('meuk')
-                else:
-                    time.sleep(1)
-                    it = it +1
-                    if it>=10:
-                        it=0
-                    self.setSerial(it)
+                    logger.info('FF02 found')
+                    self.runStart()                    
+        time.sleep(1)
+        it = it +1
+        if it>=10:
+            it=0
+        self.setSerial(it)
 
 
 
