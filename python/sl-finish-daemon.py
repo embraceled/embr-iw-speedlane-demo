@@ -92,7 +92,7 @@ class EmbrSlFinish():
                 it = 0
             self.setSerial(it)
         else:
-            logger.info(')
+            logger.info('found proper port')
             self.fireItUp(it)
 
 
