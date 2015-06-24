@@ -79,7 +79,7 @@ class EmbrSlStart():
         logger.info('Starting Iceworld start daemon')
 
 
-   def setSerial(self, it):
+    def setSerial(self, it):
         #get serial port 100% on ttyACM0 on clean boot but to help with debugging:
         try:
             tty = '/dev/ttyACM' + str(it)
