@@ -108,7 +108,7 @@ class EmbrSlFinish1():
             logger.info('00 %s',self.read_chars)
             if len(self.read_chars)==30:
                 logger.info('hier')
-                if self.read_chars[21:25]=='FF02':
+                if 'FF02' in self.read_chars:
                     logger.info('FF02 found')
                     self.runStart()                    
         time.sleep(1)
