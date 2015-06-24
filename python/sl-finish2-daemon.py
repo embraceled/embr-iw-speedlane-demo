@@ -148,14 +148,13 @@ class EmbrSlFinish2():
                             hex = hex + a1
 
                         # only allow same hex once every 5 seconds
-                        if hex != hex_old or round(time.time() - ts_old) > 5:
-                            try:
-                                r = redis.Redis(connection_pool=POOL)
-                                r.publish(self.redisKey,json.dumps({'braceletId':hex,'ts':ts}))
-                                hex_old = hex
-                                ts_old = time.time()
-                            except redis.ConnectionError:
-                                logger.error('Pushing to list for %s failed, redis connection error', __name__)
+                        try:
+                            r = redis.Redis(connection_pool=POOL)
+                            r.publish(self.redisKey,json.dumps({'braceletId':hex,'ts':ts}))
+                            hex_old = hex
+                            ts_old = time.time()
+                        except redis.ConnectionError:
+                            logger.error('Pushing to list for %s failed, redis connection error', __name__)
             except IOError:
                 self.handleUSBDisconnect()
 
