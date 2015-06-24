@@ -27,7 +27,7 @@ from serial.serialutil import SerialException
 POOL = redis.ConnectionPool(host='127.0.0.1', port=6379, db=0)
 
 # Setup proper logging
-LOG_FILENAME = '/var/log/embr-sl-start-daemon.log'
+LOG_FILENAME = '/var/log/embr-sl-finish-daemon.log'
 
 logger = logging.getLogger('EbmrSensorLogger')
 logger.setLevel(logging.INFO)
@@ -48,13 +48,13 @@ handler.setFormatter(formatter)
 # add handler to logger
 logger.addHandler(handler)
 
-class EmbrSlStart():
+class EmbrSlFinish():
     # Init
     def __init__(self, **redis_kwargs):
         self.stdin_path = '/dev/null'
-        self.stdout_path = '/dev/tty' # '/var/log/embr-sl-start-daemon-out.log'
-        self.stderr_path = '/dev/tty' # '/var/log/embr-sl-start-daemon-err.log'
-        self.pidfile_path =  '/tmp/sensorStartDeamon.pid'
+        self.stdout_path = '/dev/tty' # '/var/log/embr-sl-finish-daemon-out.log'
+        self.stderr_path = '/dev/tty' # '/var/log/embr-sl-finish-daemon-err.log'
+        self.pidfile_path =  '/tmp/sensorFinishDeamon.pid'
         self.pidfile_timeout = 5
 
         #timers
@@ -64,7 +64,7 @@ class EmbrSlStart():
         self.cycles = self.time/self.sampleTime  -1 # number of cycles wait
 
         # keys
-        self.redisKey = 'embr:sl:start'
+        self.redisKey = 'embr:sl:finish'
 
         # app ident
         self.version = 'Rasberry Pi, Raspbian Embraceled Mod, v1.0.0' # TODO fetch this from image
@@ -76,7 +76,7 @@ class EmbrSlStart():
     def run(self):
         self.setSerial(0)
         #self.fireItUp(0)
-        logger.info('Starting Iceworld start daemon')
+        logger.info('Starting Iceworld finish daemon')
 
 
     def setSerial(self, it):
@@ -92,10 +92,12 @@ class EmbrSlStart():
                 it = 0
             self.setSerial(it)
         else:
+            logger.info('found proper port')
             self.fireItUp(it)
 
 
     def fireItUp(self,it):
+        logger.info('startFireItUp')
         #get ident to set mode
         self.ser.write('i')
         time.sleep(self.idResponseTime)
@@ -103,16 +105,17 @@ class EmbrSlStart():
         method = ''
         if self.ser.inWaiting() > 0:
             self.read_chars = self.ser.read(self.ser.inWaiting())
+            logger.info('00 %s',self.read_chars)
             if len(self.read_chars)==30:
-                if self.read_chars[21:25]=='FF01':
-                    self.runStart()
-                    time.sleep(1)
-        else:
-            time.sleep(1)
-            it = it+1
-            if it >= 10:
-                it = 0
-            self.setSerial(it)
+                logger.info('hier')
+                if self.read_chars[21:25]=='FF03':
+                    logger.info('FF02 found')
+                    self.runStart()                    
+        time.sleep(1)
+        it = it +1
+        if it>=10:
+            it=0
+        self.setSerial(it)
 
 
 
@@ -137,7 +140,7 @@ class EmbrSlStart():
                     self.read_chars = self.ser.read(self.ser.inWaiting())
 
                     #check if valid and then get message.
-                    if self.read_chars[0]=='\x25':
+                    if self.read_chars[0]=='\x30':
                         ts = "%.0f" % time.time()
                         hex = ''
                         for aChar in range(1,5,1):
@@ -159,7 +162,7 @@ class EmbrSlStart():
 
 # fire up daemon
 try:
-    app = EmbrSlStart()
+    app = EmbrSlFinish()
     daemon_runner = runner.DaemonRunner(app)
     daemon_runner.daemon_context.files_preserve=[handler.stream]
     daemon_runner.do_action()
