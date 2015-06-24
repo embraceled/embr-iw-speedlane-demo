@@ -110,7 +110,8 @@ class EmbrSlFinish1():
             if 'Embraceled' in self.read_chars:
                 if 'FF02' in self.read_chars:
                     logger.info('FF02 found')
-                    self.runStart()                    
+                    self.runStart()
+        self.ser.close()
         time.sleep(1)
         it = it +1
         if it>=10:

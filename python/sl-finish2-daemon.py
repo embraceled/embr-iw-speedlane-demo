@@ -112,6 +112,7 @@ class EmbrSlFinish2():
                     if 'FF03' in self.read_chars:
                         logger.info('FF03 found')
                         self.runStart()                    
+        self.ser.close()
         time.sleep(1)
         it = it +1
         if it>=10:
