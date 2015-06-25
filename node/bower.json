@@ -27,7 +27,6 @@
   "dependencies": {
     "jquery": "~2.1.4",
     "bootstrap": "~3.3.5",
-    "font-awesome": "~4.3.0",
-    "jquery-runner": "~2.3.3"
+    "font-awesome": "~4.3.0"
   }
 }

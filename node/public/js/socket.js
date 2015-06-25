@@ -14,11 +14,10 @@ var IceWorld = function(socket)
   self.user = {};
   self.scores = [];
 
-  self.countdownTimer = 3; // seconds
-
   // html elms
   var $userinfo;
   var $counter;
+  var $counterTime;
   var $scores;
   var $disconnectedModal;
 
@@ -34,13 +33,7 @@ var IceWorld = function(socket)
   {
     self.setUserInfo(data);
     self.showUserInfo();
-    self.startCountDown();
-  };
-
-  self.startRace = function()
-  {
-    self.resetTimer();
-    self.startTimer();
+    self.showCountDown();
   };
 
   self.setUserInfo = function(data)
@@ -51,9 +44,6 @@ var IceWorld = function(socket)
 
   self.showUserInfo = function()
   {
-    self.hideTimer();
-    self.resetTimer();
-
     $userinfo.show();
   };
 
@@ -64,7 +54,7 @@ var IceWorld = function(socket)
 
   self.handleFinish = function(data)
   {
-    self.stopTimer();
+    // self.stopTimer();
     // self.showUserFinishData(data);
     self.updateScores(data);
   };
@@ -74,15 +64,19 @@ var IceWorld = function(socket)
     $scores.empty();
     for (var i in data) {
       console.log(data);
-      $scores.append('<tr><td>' + i + 1 + '</td><td>' + data[i].user.full_name + '</td><td>' + data[i].time + '</td></tr>');
+      $scores.append('<tr><td>' + (parseInt(i) + 1) + '</td><td>' + data[i].user.full_name + '</td><td>' + data[i].time + '</td></tr>');
     }
   }
 
-  self.resetRace = function(data)
+  self.resetRace = function()
   {
     self.resetCounterWindow();
   };
 
+  self.resetCounterWindow = function()
+  { 
+
+  };
 
   /**
    *
@@ -90,73 +84,107 @@ var IceWorld = function(socket)
    *
    */
 
-  /**
-   * [showTimer description]
-   * @return {[type]} [description]
-   */
-  self.showTimer = function()
+  self.showCountDown = function()
   {
+    $counter.css('color', 'black');
     $counter.show();
+  }
+
+  self.handleCountDownTick = function(data)
+  {
+    $counterTime.html(data);
   };
 
-  /**
-   * [hideTimer description]
-   * @return {[type]} [description]
-   */
-  self.hideTimer = function()
+  self.handleRaceTick = function(data)
   {
-    $counter.hide();
+    $counterTime.html(data);
   };
 
-  /**
-   * [startCountDown description]
-   * @return {[type]}      [description]
-   */
-  self.startCountDown = function()
+  self.handleAlmostOutOfTime = function(data)
   {
-    self.resetTimer();
-    self.showTimer();
-    $counter.runner({
-        countdown: true,
-        startAt: self.countdownTimer * 1000,
-        stopAt: 0,
-        milliseconds: false
+    $counter.css('color', 'red');
+  };
+
+  self.handleOutOfTime = function(data)
+  {
+    console.log('OUT OF TIME');
+  };
+
+    socket.on('almost-out-of-time', function(data) {
+      self.handleAlmostOutOfTime(data);
     });
-    $counter.runner('start')
-    $counter.on('runnerFinish', function(eventObject, info) {
-      console.log(eventObject, info);
-      self.resetTimer();
-      self.startRace();
+
+    socket.on('out-of-time', function(data) {
+      self.handleOutOfTime(data);
     });
-  };
 
-  /**
-   * [startTimer description]
-   * @return {[type]} [description]
-   */
-  self.startTimer = function()
-  {
-    self.showTimer();
-    $counter.runner({
-        countdown: false
-    });
-    $counter.runner('start')
-  };
+  // /**
+  //  * [showTimer description]
+  //  * @return {[type]} [description]
+  //  */
+  // self.showTimer = function()
+  // {
+  //   $counter.show();
+  // };
 
-  /**
-   * [startTimer description]
-   * @return {[type]} [description]
-   */
-  self.stopTimer = function()
-  {
-    $counter.runner('stop');
-  };
+  // /**
+  //  * [hideTimer description]
+  //  * @return {[type]} [description]
+  //  */
+  // self.hideTimer = function()
+  // {
+  //   $counter.hide();
+  // };
 
-  self.resetTimer = function()
-  {
-    $counter.runner('reset', true);
-    $counter.runner();
-  };
+  // /**
+  //  * [startCountDown description]
+  //  * @return {[type]}      [description]
+  //  */
+  // self.startCountDown = function()
+  // {
+  //   self.resetTimer();
+  //   self.showTimer();
+  //   $counter.runner({
+  //       countdown: true,
+  //       startAt: self.countdownTimer * 1000,
+  //       stopAt: 0,
+  //       milliseconds: false
+  //   });
+  //   $counter.runner('start')
+  //   $counter.on('runnerFinish', function(eventObject, info) {
+  //     console.log(eventObject, info);
+  //     self.resetTimer();
+  //     self.startRace();
+  //   });
+  // };
+
+  // /**
+  //  * [startTimer description]
+  //  * @return {[type]} [description]
+  //  */
+  // self.startTimer = function()
+  // {
+  //   self.showTimer();
+  //   $counter.runner({
+  //       countdown: false
+  //   });
+  //   $counter.runner('start')
+  // };
+
+  // /**
+  //  * [startTimer description]
+  //  * @return {[type]} [description]
+  //  */
+  // self.stopTimer = function()
+  // {
+  //   $counter.runner('stop');
+  // };
+
+  // self.resetTimer = function()
+  // {
+  //   $counter.runner('reset', true);
+  //   $counter.runner();
+  // };
 
 
   /**
@@ -214,12 +242,25 @@ var IceWorld = function(socket)
       self.handleStart(data);
     });
 
+    socket.on('countdown-tick', function(data) {
+      self.handleCountDownTick(data);
+    });
+
+    socket.on('race-tick', function(data) {
+      console.log('race', data);
+      self.handleRaceTick(data);
+    });
+
     socket.on('finish', function(data) {
       self.handleFinish(data);
     });
 
+    socket.on('almost-out-of-time', function(data) {
+      self.handleAlmostOutOfTime(data);
+    });
+
     socket.on('out-of-time', function(data) {
-      self.resetRace(data);
+      self.handleOutOfTime(data);
     });
   };
 
@@ -254,9 +295,7 @@ var IceWorld = function(socket)
   var initCounter = function()
   {
     $counter = $('#counter');
-
-    // init runner
-    $counter.runner();
+    $counterTime = $('#counter-time');
   };
 
   /**
