@@ -18,7 +18,7 @@ import json
 import redis
 import os
 import serial
-
+import threading
 from daemon import runner
 from lockfile import LockTimeout
 from serial.serialutil import SerialException
@@ -48,6 +48,27 @@ handler.setFormatter(formatter)
 # add handler to logger
 logger.addHandler(handler)
 
+class Listener(threading.Thread):
+    def __init__(self,embr, r, channels):
+        threading.Thread.__init__(self)
+        self.redis = r
+        self.pubsub = self.redis.pubsub()
+        self.pubsub.subscribe(channels)
+    
+    def work(self, item):
+        print item['channel'], ":", item['data']
+    
+    def run(self):
+        for item in self.pubsub.listen():
+            if item['data'] == "KILL":
+                self.pubsub.unsubscribe()
+                print self, "unsubscribed and finished"
+                break
+            else:
+                self.work(item)
+
+
+
 class EmbrSlStart():
     # Init
     def __init__(self, **redis_kwargs):
@@ -71,6 +92,9 @@ class EmbrSlStart():
 
         self.ser = ''
         self.read_chars = ''
+
+        client = Listener(self, redis.Redis(), ['embr:sl:finished'])
+        client.start()
 
 
     def run(self):
