@@ -14,11 +14,9 @@ var IceWorld = function(socket)
   self.user = {};
   self.scores = [];
 
-  self.countdownTimer = 3; // seconds
-
   // html elms
   var $userinfo;
-  var $counter;
+  // var $counter;
   var $scores;
   var $disconnectedModal;
 
@@ -34,13 +32,13 @@ var IceWorld = function(socket)
   {
     self.setUserInfo(data);
     self.showUserInfo();
-    self.startCountDown();
+    // self.startCountDown();
   };
 
   self.startRace = function()
   {
-    self.resetTimer();
-    self.startTimer();
+    // self.resetTimer();
+    // self.startTimer();
   };
 
   self.setUserInfo = function(data)
@@ -51,8 +49,8 @@ var IceWorld = function(socket)
 
   self.showUserInfo = function()
   {
-    self.hideTimer();
-    self.resetTimer();
+    // self.hideTimer();
+    // self.resetTimer();
 
     $userinfo.show();
   };
@@ -64,7 +62,7 @@ var IceWorld = function(socket)
 
   self.handleFinish = function(data)
   {
-    self.stopTimer();
+    // self.stopTimer();
     // self.showUserFinishData(data);
     self.updateScores(data);
   };
@@ -90,73 +88,73 @@ var IceWorld = function(socket)
    *
    */
 
-  /**
-   * [showTimer description]
-   * @return {[type]} [description]
-   */
-  self.showTimer = function()
-  {
-    $counter.show();
-  };
+  // /**
+  //  * [showTimer description]
+  //  * @return {[type]} [description]
+  //  */
+  // self.showTimer = function()
+  // {
+  //   $counter.show();
+  // };
 
-  /**
-   * [hideTimer description]
-   * @return {[type]} [description]
-   */
-  self.hideTimer = function()
-  {
-    $counter.hide();
-  };
+  // /**
+  //  * [hideTimer description]
+  //  * @return {[type]} [description]
+  //  */
+  // self.hideTimer = function()
+  // {
+  //   $counter.hide();
+  // };
 
-  /**
-   * [startCountDown description]
-   * @return {[type]}      [description]
-   */
-  self.startCountDown = function()
-  {
-    self.resetTimer();
-    self.showTimer();
-    $counter.runner({
-        countdown: true,
-        startAt: self.countdownTimer * 1000,
-        stopAt: 0,
-        milliseconds: false
-    });
-    $counter.runner('start')
-    $counter.on('runnerFinish', function(eventObject, info) {
-      console.log(eventObject, info);
-      self.resetTimer();
-      self.startRace();
-    });
-  };
+  // /**
+  //  * [startCountDown description]
+  //  * @return {[type]}      [description]
+  //  */
+  // self.startCountDown = function()
+  // {
+  //   self.resetTimer();
+  //   self.showTimer();
+  //   $counter.runner({
+  //       countdown: true,
+  //       startAt: self.countdownTimer * 1000,
+  //       stopAt: 0,
+  //       milliseconds: false
+  //   });
+  //   $counter.runner('start')
+  //   $counter.on('runnerFinish', function(eventObject, info) {
+  //     console.log(eventObject, info);
+  //     self.resetTimer();
+  //     self.startRace();
+  //   });
+  // };
 
-  /**
-   * [startTimer description]
-   * @return {[type]} [description]
-   */
-  self.startTimer = function()
-  {
-    self.showTimer();
-    $counter.runner({
-        countdown: false
-    });
-    $counter.runner('start')
-  };
+  // /**
+  //  * [startTimer description]
+  //  * @return {[type]} [description]
+  //  */
+  // self.startTimer = function()
+  // {
+  //   self.showTimer();
+  //   $counter.runner({
+  //       countdown: false
+  //   });
+  //   $counter.runner('start')
+  // };
 
-  /**
-   * [startTimer description]
-   * @return {[type]} [description]
-   */
-  self.stopTimer = function()
-  {
-    $counter.runner('stop');
-  };
+  // /**
+  //  * [startTimer description]
+  //  * @return {[type]} [description]
+  //  */
+  // self.stopTimer = function()
+  // {
+  //   $counter.runner('stop');
+  // };
 
-  self.resetTimer = function()
-  {
-    $counter.runner('reset', true);
-    $counter.runner();
-  };
+  // self.resetTimer = function()
+  // {
+  //   $counter.runner('reset', true);
+  //   $counter.runner();
+  // };
 
 
   /**
@@ -218,6 +216,10 @@ var IceWorld = function(socket)
       self.handleFinish(data);
     });
 
+    socket.on('almost-out-of-time', function(data) {
+      // self.resetRace(data);
+    });
+
     socket.on('out-of-time', function(data) {
       self.resetRace(data);
     });
@@ -247,17 +249,17 @@ var IceWorld = function(socket)
     $scores = $('#scores');
   };
 
-  /**
-   * [initCounter description]
-   * @return {[type]} [description]
-   */
-  var initCounter = function()
-  {
-    $counter = $('#counter');
+  // /**
+  //  * [initCounter description]
+  //  * @return {[type]} [description]
+  //  */
+  // var initCounter = function()
+  // {
+  //   $counter = $('#counter');
 
-    // init runner
-    $counter.runner();
-  };
+  //   // init runner
+  //   $counter.runner();
+  // };
 
   /**
    * [initCounter description]
@@ -283,8 +285,8 @@ var IceWorld = function(socket)
     // init scores
     initScores();
 
-    // init counter
-    initCounter();
+    // // init counter
+    // initCounter();
 
     // init user info
     initUserInfo();

@@ -121,9 +121,9 @@ io.on('connection', function(socket) {
     console.log('Connected: ' + data);
   });
 
-  socket.on('start', function(data) {
-    startRace(data);
-  });
+  // socket.on('start', function(data) {
+  //   startRace(data);
+  // });
 
   socket.on('disconnect', function() {
     // remove socket from rooms
@@ -137,14 +137,20 @@ io.on('connection', function(socket) {
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-// RACE FOO
+// RACE FOO, should not be in app.. demo heuh
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-var raceState = false;
-var raceInfo = {};
-var raceTimer = 0;
+var currentBracelet = false;
+var raceStarted = false;
+var raceInfo; // current user info
+
+// seeded users in static redis db
 var users = [];
+
+// keep track of finished messages here, take average time
+var raceFinishedMessages = [];
+
 
 var getUsers =  function() {
   redisClient.get('embr:sl:users', function(err, rs) {
@@ -157,7 +163,6 @@ var getUsers =  function() {
     // console.log(users);
   });
 };
-
 
 var getScoreList = function(cb) {
 
@@ -175,41 +180,180 @@ var getScoreList = function(cb) {
       rs[a] = JSON.parse(rs[a]);
     }
 
-    console.log(rs);
+    // console.log(rs);
 
     cb(rs);
   });
 };
 
-var handleStart = function(message)
+
+
+
+// pre race countdown timer
+var countDownTimer = new Stopwatch(3000, {
+  refreshRateMS: 1000
+});
+
+// race timer
+var raceTimer = new Stopwatch(null, {
+  refreshRateMS: 100
+});
+// max time, will countdown to max allowed time (40 seconds, warning at end-5)
+var outOfTimeTimer = new Stopwatch(40000, {
+  refreshRateMS: 1000,
+  almostDoneMS: 5000
+});
+
+// convert ms to sec with fixedSize
+var msToSec = function(ms, fixedSize)
 {
-  raceState = true;
+  var seconds = ms / 1000;
+  if ( ! fixedSize) {
+    return seconds | 0; // Math.floor(ms / 1000);
+  } else {
+    return seconds.toFixed(fixedSize);
+  }
+}
+
+// Start race when countdown timer is done
+countDownTimer.on('time', function() {
+  console.log('countdown tick', countDownTimer.ms, msToSec(countDownTimer.ms));
+  io.emit('countdown-tick', msToSec(countDownTimer.ms));
+});
+
+// Start race when countdown timer is done
+countDownTimer.on('done', function() {
+  console.log('countdown complete, starting race');
+  startRace();
+});
+
+// tick every 100ms
+raceTimer.on('time', function() {
+  console.log('raceTimer tick', raceTimer.ms, msToSec(raceTimer.ms, 1));
+  io.emit('race-tick', msToSec(countDownTimer.ms, 1));
+});
+
+// Almost out of time
+outOfTimeTimer.on('almostdone', function() {
+  console.log('Almost out of time', outOfTimeTimer.ms);
+
+  // notify frontend, almost out of time
+  io.emit('almost-out-of-time', 1);
+});
+
+// Out of time
+outOfTimeTimer.on('done', function(){
+  console.log('Out of time', outOfTimeTimer.ms);
+
+  // notify frontend, almost out of time
+  io.emit('out-of-time', 1);
+
+  // reset
+  resetRace();
+});
+
+
+// redis start message
+var handleStartMessage = function(message)
+{
+  if (currentBracelet) {
+    console.log('Other bracelet is currently racing: ' + currentBracelet);
+    return;
+  }
+
+  // set state to message.braceletId
+  currentBracelet = message.braceletId;
 
   console.log('start message:');
   console.log(message);
   console.log(message.braceletId);
 
-  // fetch user
-  io.emit('start', users[message.braceletId]);
+  // set current user
+  raceInfo = users[message.braceletId];
+  console.log(raceInfo);
+
+  // show user in app
+  io.emit('start', raceInfo);
+
+  // reset timers
+  resetTimers();
+
+  // start count down timer
+  countDownTimer.start();
 };
 
-var startRace = function(data)
+var resetRace = function()
 {
-  // start timer here
+  currentBracelet = null;
+  raceStarted = false;
+  resetTimers();
 };
 
-var handleFinish = function(message)
+// rest all timers here
+var resetTimers = function()
 {
-  raceState = false;
+  countDownTimer.reset();
+  raceTimer.reset();
+  outOfTimeTimer.reset();
+};
+
+// started when countdown is done
+var startRace = function()
+{
+  // start timer
+  console.log('start race');
+
+  raceStarted = true;
+  raceTimer.start();
+  outOfTimeTimer.start();
+};
+
+
+var handleFinishMessage = function(message)
+{
+  if ( ! raceStarted || message.braceletId != currentBracelet) {
+    console.log('Ignoring finish message from: ' + message.braceletId + ' current active: ' + currentBracelet);
+    return;
+  }
+
   console.log('finish message:');
   console.log(message);
 
-  // stop timer hee
+  // for now just call finishRace.. here we should use a finish timer to check max time between finish message and get the average ms as time/score
 
-  // add to scores
+  finishRace();
 
-  io.emit('finish', [{'user' : {'full_name' : 'Robert van Geerenstein'}, 'time' : 14}]);
+
+
+  // io.emit('finish', [{'user' : {'full_name' : 'Robert van Geerenstein'}, 'time' : 14}]);
   // getScoreList(function() {io.emit('finish', rs)});
+}
+
+// called after x amount of finish messages
+var finishRace = function()
+{
+  // stop timer hee
+  raceTimer.stop();
+  outOfTimeTimer.stop();
+
+  // raceInfo
+  console.log('time: ', raceTimer.ms);
+  var finalTime = raceTimer.ms;
+
+  // calculate score here
+
+
+  // add final score to db
+
+
+  // show final score to user
+  io.emit('finish-time', finalTime);
+
+  // notify frontend with new score list
+  getScoreList((function(rs) {io.emit('finish', rs)}));
+
+  // unset current bracelet
+  resetRace();
 }
 
 
@@ -229,12 +373,10 @@ redisSubClient.on("message", function(channel, message) {
 
   switch (channel) {
     case 'embr:sl:start':
-      // if (raceState) break;
-      handleStart(message);
+      handleStartMessage(message);
       break
     case 'embr:sl:finish':
-      if ( ! raceState) break;
-      handleFinish(message);
+      handleFinishMessage(message);
       break
   }
 });
