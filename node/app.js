@@ -191,7 +191,7 @@ var getScoreList = function(cb) {
 
 // pre race countdown timer
 var countDownTimer = new Stopwatch(3000, {
-  refreshRateMS: 1000
+  refreshRateMS: 100
 });
 
 // race timer
@@ -200,7 +200,7 @@ var raceTimer = new Stopwatch(null, {
 });
 // max time, will countdown to max allowed time (40 seconds, warning at end-5)
 var outOfTimeTimer = new Stopwatch(40000, {
-  refreshRateMS: 1000,
+  refreshRateMS: 100,
   almostDoneMS: 5000
 });
 
@@ -230,7 +230,7 @@ countDownTimer.on('done', function() {
 // tick every 100ms
 raceTimer.on('time', function() {
   console.log('raceTimer tick', raceTimer.ms, msToSec(raceTimer.ms, 1));
-  io.emit('race-tick', msToSec(countDownTimer.ms, 1));
+  io.emit('race-tick', msToSec(raceTimer.ms, 1));
 });
 
 // Almost out of time

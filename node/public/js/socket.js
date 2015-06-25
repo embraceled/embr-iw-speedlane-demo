@@ -16,7 +16,8 @@ var IceWorld = function(socket)
 
   // html elms
   var $userinfo;
-  // var $counter;
+  var $counter;
+  var $counterTime;
   var $scores;
   var $disconnectedModal;
 
@@ -32,6 +33,7 @@ var IceWorld = function(socket)
   {
     self.setUserInfo(data);
     self.showUserInfo();
+    self.showCountDown();
     // self.startCountDown();
   };
 
@@ -87,6 +89,21 @@ var IceWorld = function(socket)
    * TIMER
    *
    */
+
+  self.showCountDown = function()
+  {
+    $counter.show();
+  }
+
+  self.handleCountDownTick = function(data)
+  {
+    $counterTime.html(data);
+  };
+
+  self.handleRaceTick = function(data)
+  {
+    $counterTime.html(data);
+  };
 
   // /**
   //  * [showTimer description]
@@ -212,6 +229,15 @@ var IceWorld = function(socket)
       self.handleStart(data);
     });
 
+    socket.on('countdown-tick', function(data) {
+      self.handleCountDownTick(data);
+    });
+
+    socket.on('race-tick', function(data) {
+      console.log('race', data);
+      self.handleRaceTick(data);
+    });
+
     socket.on('finish', function(data) {
       self.handleFinish(data);
     });
@@ -249,17 +275,15 @@ var IceWorld = function(socket)
     $scores = $('#scores');
   };
 
-  // /**
-  //  * [initCounter description]
-  //  * @return {[type]} [description]
-  //  */
-  // var initCounter = function()
-  // {
-  //   $counter = $('#counter');
-
-  //   // init runner
-  //   $counter.runner();
-  // };
+  /**
+   * [initCounter description]
+   * @return {[type]} [description]
+   */
+  var initCounter = function()
+  {
+    $counter = $('#counter');
+    $counterTime = $('#counter-time');
+  };
 
   /**
    * [initCounter description]
@@ -285,8 +309,8 @@ var IceWorld = function(socket)
     // init scores
     initScores();
 
-    // // init counter
-    // initCounter();
+    // init counter
+    initCounter();
 
     // init user info
     initUserInfo();
