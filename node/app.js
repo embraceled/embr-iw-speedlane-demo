@@ -272,6 +272,14 @@ var handleStartMessage = function(message)
     return;
   }
 
+  // set current user
+  raceInfo = users[message.braceletId];
+  console.log(raceInfo);
+
+  if (typeof(raceInfo) == 'undefined') {
+    return;
+  }
+
   // set state to message.braceletId
   currentBracelet = message.braceletId;
 
@@ -279,9 +287,6 @@ var handleStartMessage = function(message)
   console.log(message);
   console.log(message.braceletId);
 
-  // set current user
-  raceInfo = users[message.braceletId];
-  console.log(raceInfo);
 
   // show user in app
   io.emit('start', raceInfo);
