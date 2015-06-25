@@ -48,24 +48,24 @@ handler.setFormatter(formatter)
 # add handler to logger
 logger.addHandler(handler)
 
-class Listener(threading.Thread):
-    def __init__(self,embr, r, channels):
-        threading.Thread.__init__(self)
-        self.redis = r
-        self.pubsub = self.redis.pubsub()
-        self.pubsub.subscribe(channels)
-    
-    def work(self, item):
-        print item['channel'], ":", item['data']
-    
-    def run(self):
-        for item in self.pubsub.listen():
-            if item['data'] == "KILL":
-                self.pubsub.unsubscribe()
-                print self, "unsubscribed and finished"
-                break
-            else:
-                self.work(item)
+##class Listener(threading.Thread):
+##    def __init__(self,embr, r, channels):
+##        threading.Thread.__init__(self)
+##        self.redis = r
+##        self.pubsub = self.redis.pubsub()
+##        self.pubsub.subscribe(channels)
+##    
+##    def work(self, item):
+##        print item['channel'], ":", item['data']
+##    
+##    def run(self):
+##        for item in self.pubsub.listen():
+##            if item['data'] == "KILL":
+##                self.pubsub.unsubscribe()
+##                print self, "unsubscribed and finished"
+##                break
+##            else:
+##                self.work(item)
 
 
 
@@ -93,8 +93,8 @@ class EmbrSlStart():
         self.ser = ''
         self.read_chars = ''
 
-        client = Listener(self, redis.Redis(), ['embr:sl:finished'])
-        client.start()
+##        client = Listener(self, redis.Redis(), ['embr:sl:finished'])
+##        client.start()
 
 
     def run(self):
