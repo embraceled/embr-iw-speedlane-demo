@@ -19,6 +19,8 @@ import redis
 import os
 import serial
 import threading
+import signal
+import sys
 from daemon import runner
 from lockfile import LockTimeout
 from serial.serialutil import SerialException
@@ -49,24 +51,31 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 class Listener(threading.Thread):
-    def __init__(self,embr, r, channels):
+    def __init__(self, embr, r, channels):
         threading.Thread.__init__(self)
+        self.embr = embr
         self.redis = r
         self.pubsub = self.redis.pubsub()
         self.pubsub.subscribe(channels)
     
     def work(self, item):
-        print item['channel'], ":", item['data']
+        logger.info('Channel: %s and data: %s', item['channel'], item['data'])
     
     def run(self):
-        for item in self.pubsub.listen():
-            if item['data'] == "KILL":
-                self.pubsub.unsubscribe()
-                print self, "unsubscribed and finished"
-                break
-            else:
-                self.work(item)
+        try:
+            for item in self.pubsub.listen():
+                if item['channel'] == "embr:sl:finished" and item['data'] == "KILL":
+                    logger.info(self.embr.ser)
+                    # THIS KILLS ALL GAMES!!!
+                    self.embr.ser.write("\x02\x03\x24")
+                    logger.info('written \x02\x03\x24')
+                else:
+                    self.work(item)
+        except AttributeError:
+            logger.info('jow')
 
+    def stop(self):
+        self.pubsub.unsubscribe()
 
 
 class EmbrSlStart():
@@ -86,6 +95,7 @@ class EmbrSlStart():
 
         # keys
         self.redisKey = 'embr:sl:start'
+        self.redisSubscribe = 'embr:sl:finished'
 
         # app ident
         self.version = 'Rasberry Pi, Raspbian Embraceled Mod, v1.0.0' # TODO fetch this from image
@@ -93,15 +103,24 @@ class EmbrSlStart():
         self.ser = ''
         self.read_chars = ''
 
-        client = Listener(self, redis.Redis(), ['embr:sl:finished'])
-        client.start()
+        self.client = ''
 
 
     def run(self):
+        signal.signal(signal.SIGTERM, self.sigterm_handler)
+
         self.setSerial(0)
         #self.fireItUp(0)
         logger.info('Starting Iceworld start daemon')
 
+    def sigterm_handler(self, _signo, _stack_frame):
+        # Raises SystemExit(0):
+        logger.info('Stopping')
+        self.client.shutdown_flag = True
+        self.client.stop()
+        self.client.join()
+        # self.client.shutdown()
+        sys.exit(0)
 
     def setSerial(self, it):
         #get serial port 100% on ttyACM0 on clean boot but to help with debugging:
@@ -130,12 +149,10 @@ class EmbrSlStart():
         if self.ser.inWaiting() > 0:
             self.read_chars = self.ser.read(self.ser.inWaiting())
             logger.info('00 %s',self.read_chars)
-            if len(self.read_chars)==30:
-                logger.info('hier')
-                if 'Embraceled' in self.read_chars:
-                    if 'FF01' in self.read_chars:
-                        logger.info('FF01 found')
-                        self.runStart()                    
+            if 'Embraceled' in self.read_chars:
+                if 'FF01' in self.read_chars:
+                    logger.info('FF01 found')
+                    self.runStart()                    
         self.ser.close()
         time.sleep(1)
         it = it +1
@@ -154,6 +171,11 @@ class EmbrSlStart():
     def runStart(self):
         # if like bracelet is being used
         logger.info('Starting')
+
+        logger.info(self.ser)
+        self.client = Listener(self, redis.Redis(), [self.redisSubscribe])
+        self.client.start()
+
         # initial values for duplicate like check
         hex_old = 'o'
         ts_old = time.time()
