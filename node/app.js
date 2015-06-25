@@ -301,6 +301,9 @@ var handleStartMessage = function(message)
 
 var resetRace = function()
 {
+  // kill bracelet mode
+  redisClient.publish(redisFinishList, 'KILL');
+
   currentBracelet = null;
   raceStarted = false;
   resetTimers();
@@ -377,12 +380,9 @@ var finishRace = function()
   // show final score to user
   io.emit('finish-time', finalTime);
 
-  redisClient.publish(redisFinishList, 'KILL');
-  
   // unset current bracelet
   resetRace();
 }
-
 
 // load user list db woot
 getUsers();
