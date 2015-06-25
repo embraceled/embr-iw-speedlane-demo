@@ -27,8 +27,9 @@ process.env.PORT = config.port || process.env.PORT;
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-var redisUserList  = 'embr:sl:users';
-var redisScoreList = 'embr:sl:scores';
+var redisUserList   = 'embr:sl:users';
+var redisScoreList  = 'embr:sl:scores';
+var redisFinishList = 'embr:sl:finished';
 
 // General purpose redis client
 var redisClient = redis.createClient(
@@ -376,6 +377,7 @@ var finishRace = function()
   // show final score to user
   io.emit('finish-time', finalTime);
 
+  redisClient.publish(redisFinishList, 'KILL');
   
   // unset current bracelet
   resetRace();
