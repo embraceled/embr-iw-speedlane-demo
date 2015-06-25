@@ -7,7 +7,7 @@
 #
 # Author:  Ralf Ekkelenkamp <ralf@embraceled.com>
 # Date:    2015-06-18
-# Version: 0.0.1
+# Version: 0.0.2
 #
 ###############################################################################
 
