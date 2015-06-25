@@ -27,6 +27,9 @@ process.env.PORT = config.port || process.env.PORT;
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+var redisUserList  = 'embr:sl:users';
+var redisScoreList = 'embr:sl:scores';
+
 // General purpose redis client
 var redisClient = redis.createClient(
     config.redis.port,
@@ -153,7 +156,7 @@ var raceFinishedMessages = [];
 
 
 var getUsers =  function() {
-  redisClient.get('embr:sl:users', function(err, rs) {
+  redisClient.get(redisUserList, function(err, rs) {
     if (err) {
       console.log(err);
       res.send(500);
@@ -165,10 +168,9 @@ var getUsers =  function() {
 };
 
 var getScoreList = function(cb) {
-
   // get redis list of current scores
-  // redisClient.zrange('embr:sl:scores', 0, 10, 'withscores', function(err, rs) {
-  redisClient.zrange('embr:sl:scores', 0, 10, function(err, rs) {
+  // redisClient.zrange(redisScoreList, 0, 10, 'withscores', function(err, rs) {
+  redisClient.zrange(redisScoreList, 0, 10, function(err, rs) {
     if (err) {
       console.log(err);
       res.send(500);
@@ -190,7 +192,7 @@ var getScoreList = function(cb) {
 
 
 // pre race countdown timer
-var countDownTimer = new Stopwatch(3000, {
+var countDownTimer = new Stopwatch(3400, {
   refreshRateMS: 100
 });
 
@@ -218,7 +220,12 @@ var msToSec = function(ms, fixedSize)
 // Start race when countdown timer is done
 countDownTimer.on('time', function() {
   console.log('countdown tick', countDownTimer.ms, msToSec(countDownTimer.ms));
-  io.emit('countdown-tick', msToSec(countDownTimer.ms));
+  
+  // only emit countdown time in client when race has not been started yet 
+  // and currentBracelet has a value 
+  if ( ! raceStarted && currentBracelet) {
+    io.emit('countdown-tick', msToSec(countDownTimer.ms));
+  }
 });
 
 // Start race when countdown timer is done
@@ -230,7 +237,11 @@ countDownTimer.on('done', function() {
 // tick every 100ms
 raceTimer.on('time', function() {
   console.log('raceTimer tick', raceTimer.ms, msToSec(raceTimer.ms, 1));
-  io.emit('race-tick', msToSec(raceTimer.ms, 1));
+
+  // only emit when race has been started
+  if (raceStarted && currentBracelet) {
+    io.emit('race-tick', msToSec(raceTimer.ms, 1));
+  }
 });
 
 // Almost out of time
@@ -323,8 +334,6 @@ var handleFinishMessage = function(message)
 
   finishRace();
 
-
-
   // io.emit('finish', [{'user' : {'full_name' : 'Robert van Geerenstein'}, 'time' : 14}]);
   // getScoreList(function() {io.emit('finish', rs)});
 }
@@ -336,22 +345,33 @@ var finishRace = function()
   raceTimer.stop();
   outOfTimeTimer.stop();
 
-  // raceInfo
+  // calculate score from multiple entries here
   console.log('time: ', raceTimer.ms);
-  var finalTime = raceTimer.ms;
+  var finalTime = msToSec(raceTimer.ms, 2);
+  console.log('final time: ', finalTime);
 
-  // calculate score here
-
+  var score = {
+    'user' : raceInfo,
+    'time' : finalTime
+  };
 
   // add final score to db
+  redisClient.zadd(redisScoreList, finalTime, JSON.stringify(score), function(err, rs) {
+    if (err) {
+      console.log(err);
+      res.send(500);
+    }
 
+    // promises anyone...
+    // notify frontend with new score list
+    console.log('finish adding user');
+    getScoreList((function(rs) {io.emit('finish', rs)}));
+  });
 
   // show final score to user
   io.emit('finish-time', finalTime);
 
-  // notify frontend with new score list
-  getScoreList((function(rs) {io.emit('finish', rs)}));
-
+  
   // unset current bracelet
   resetRace();
 }

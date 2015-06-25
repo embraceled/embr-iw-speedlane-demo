@@ -34,13 +34,6 @@ var IceWorld = function(socket)
     self.setUserInfo(data);
     self.showUserInfo();
     self.showCountDown();
-    // self.startCountDown();
-  };
-
-  self.startRace = function()
-  {
-    // self.resetTimer();
-    // self.startTimer();
   };
 
   self.setUserInfo = function(data)
@@ -51,9 +44,6 @@ var IceWorld = function(socket)
 
   self.showUserInfo = function()
   {
-    // self.hideTimer();
-    // self.resetTimer();
-
     $userinfo.show();
   };
 
@@ -74,15 +64,19 @@ var IceWorld = function(socket)
     $scores.empty();
     for (var i in data) {
       console.log(data);
-      $scores.append('<tr><td>' + i + 1 + '</td><td>' + data[i].user.full_name + '</td><td>' + data[i].time + '</td></tr>');
+      $scores.append('<tr><td>' + (parseInt(i) + 1) + '</td><td>' + data[i].user.full_name + '</td><td>' + data[i].time + '</td></tr>');
     }
   }
 
-  self.resetRace = function(data)
+  self.resetRace = function()
   {
     self.resetCounterWindow();
   };
 
+  self.resetCounterWindow = function()
+  { 
+
+  };
 
   /**
    *
@@ -92,6 +86,7 @@ var IceWorld = function(socket)
 
   self.showCountDown = function()
   {
+    $counter.css('color', 'black');
     $counter.show();
   }
 
@@ -104,6 +99,24 @@ var IceWorld = function(socket)
   {
     $counterTime.html(data);
   };
+
+  self.handleAlmostOutOfTime = function(data)
+  {
+    $counter.css('color', 'red');
+  };
+
+  self.handleOutOfTime = function(data)
+  {
+    console.log('OUT OF TIME');
+  };
+
+    socket.on('almost-out-of-time', function(data) {
+      self.handleAlmostOutOfTime(data);
+    });
+
+    socket.on('out-of-time', function(data) {
+      self.handleOutOfTime(data);
+    });
 
   // /**
   //  * [showTimer description]
@@ -243,11 +256,11 @@ var IceWorld = function(socket)
     });
 
     socket.on('almost-out-of-time', function(data) {
-      // self.resetRace(data);
+      self.handleAlmostOutOfTime(data);
     });
 
     socket.on('out-of-time', function(data) {
-      self.resetRace(data);
+      self.handleOutOfTime(data);
     });
   };
 
