@@ -31,7 +31,7 @@ POOL = redis.ConnectionPool(host='127.0.0.1', port=6379, db=0)
 # Setup proper logging
 LOG_FILENAME = '/var/log/embr-sl-start-daemon.log'
 
-logger = logging.getLogger('EbmrSensorLogger')
+logger = logging.getLogger('EmbrSensorLogger')
 logger.setLevel(logging.INFO)
 
 # create formatter
@@ -65,10 +65,10 @@ class Listener(threading.Thread):
         try:
             for item in self.pubsub.listen():
                 if item['channel'] == "embr:sl:finished" and item['data'] == "KILL":
-                    logger.info(self.embr.ser)
-                    # THIS KILLS ALL GAMES!!!
-                    self.embr.ser.write("\x02\x03\x24")
-                    logger.info('written \x02\x03\x24')
+                    # logger.info(self.embr.ser)
+                    logger.info('Killing race game')
+                    for i in range(5):
+                        self.embr.ser.write("\x04\x03\x24\x02\x00")
                 else:
                     self.work(item)
         except AttributeError:
