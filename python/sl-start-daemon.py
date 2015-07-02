@@ -62,10 +62,10 @@ class Listener(threading.Thread):
         logger.info('Channel: %s and data: %s', item['channel'], item['data'])
     
     def run(self):
+        logger.debug('Starting redis subscribe thread')
         try:
             for item in self.pubsub.listen():
                 if item['channel'] == "embr:sl:finished" and item['data'] == "KILL":
-                    # logger.info(self.embr.ser)
                     logger.info('Killing race game')
                     for i in range(5):
                         self.embr.ser.write("\x04\x03\x24\x02\x00")
@@ -73,10 +73,11 @@ class Listener(threading.Thread):
                 else:
                     self.work(item)
         except AttributeError:
-            logger.info('jow')
+            logger.info('Listener attribute error')
 
     def stop(self):
         self.pubsub.unsubscribe()
+        logger.debug('Stopping redis subscribe thread')
 
 
 class EmbrSlStart():
@@ -88,7 +89,7 @@ class EmbrSlStart():
         self.pidfile_path =  '/tmp/sensorStartDeamon.pid'
         self.pidfile_timeout = 5
 
-        #timers
+        # timers
         self.time = 1 # time in second
         self.sampleTime = 0.005 # sample time in seconds
         self.idResponseTime = 0.1 # sample time in seconds
@@ -111,16 +112,15 @@ class EmbrSlStart():
         signal.signal(signal.SIGTERM, self.sigterm_handler)
 
         self.setSerial(0)
-        #self.fireItUp(0)
         logger.info('Starting Iceworld start daemon')
 
+    # sigterm handler to properly kill redis thread
     def sigterm_handler(self, _signo, _stack_frame):
         # Raises SystemExit(0):
         logger.info('Stopping')
         self.client.shutdown_flag = True
         self.client.stop()
         self.client.join()
-        # self.client.shutdown()
         sys.exit(0)
 
     def setSerial(self, it):
@@ -142,14 +142,14 @@ class EmbrSlStart():
 
     def fireItUp(self,it):
         logger.info('startFireItUp')
-        #get ident to set mode
+        # get ident to set mode
         self.ser.write('i')
         time.sleep(self.idResponseTime)
         self.read_chars = ''
         method = ''
         if self.ser.inWaiting() > 0:
             self.read_chars = self.ser.read(self.ser.inWaiting())
-            logger.info('00 %s',self.read_chars)
+            logger.info('00 %s', self.read_chars)
             if 'Embraceled' in self.read_chars:
                 if 'FF01' in self.read_chars:
                     logger.info('FF01 found')
@@ -157,10 +157,9 @@ class EmbrSlStart():
         self.ser.close()
         time.sleep(1)
         it = it +1
-        if it>=10:
+        if it >= 10:
             it=0
         self.setSerial(it)
-
 
 
     # handle IOError
