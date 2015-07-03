@@ -128,6 +128,10 @@ io.on('connection', function(socket) {
   // socket.on('start', function(data) {
   //   startRace(data);
   // });
+  
+  socket.on('reset-scores', function() {
+    resetScores();
+  });
 
   socket.on('disconnect', function() {
     // remove socket from rooms
@@ -168,13 +172,28 @@ var getUsers =  function() {
   });
 };
 
+// clear all scores
+var resetScores = function()
+{
+  redisClient.del(redisScoreList, function(err, rs) {
+    if (err) {
+      console.log(err);
+      return;
+    }
+
+    // update scores on clients
+    io.emit('update-scores', []);
+  });
+};
+
+// get current score list (last 10)
 var getScoreList = function(cb) {
   // get redis list of current scores
   // redisClient.zrange(redisScoreList, 0, 10, 'withscores', function(err, rs) {
   redisClient.zrange(redisScoreList, 0, 10, function(err, rs) {
     if (err) {
       console.log(err);
-      res.send(500);
+      return;
     }
 
     // it returns an array with strings.
@@ -194,7 +213,8 @@ var getScoreList = function(cb) {
 
 // pre race countdown timer
 var countDownTimer = new Stopwatch(3400, {
-  refreshRateMS: 100
+  refreshRateMS: 100,
+  almostDoneMS: 800
 });
 
 // race timer
@@ -230,14 +250,15 @@ countDownTimer.on('time', function() {
 });
 
 // Start race when countdown timer is done
-countDownTimer.on('done', function() {
+// countDownTimer.on('done', function() {
+countDownTimer.on('almostdone', function() {
   console.log('countdown complete, starting race');
   startRace();
 });
 
 // tick every 100ms
 raceTimer.on('time', function() {
-  console.log('raceTimer tick', raceTimer.ms, msToSec(raceTimer.ms, 1));
+  // console.log('raceTimer tick', raceTimer.ms, msToSec(raceTimer.ms, 1));
 
   // only emit when race has been started
   if (raceStarted && currentBracelet) {
@@ -342,10 +363,7 @@ var handleFinishMessage = function(message)
   // for now just call finishRace.. here we should use a finish timer to check max time between finish message and get the average ms as time/score
 
   finishRace();
-
-  // io.emit('finish', [{'user' : {'full_name' : 'Robert van Geerenstein'}, 'time' : 14}]);
-  // getScoreList(function() {io.emit('finish', rs)});
-}
+};
 
 // called after x amount of finish messages
 var finishRace = function()
@@ -382,7 +400,23 @@ var finishRace = function()
 
   // unset current bracelet
   resetRace();
-}
+};
+
+var handleSubscribeMessage = function(message)
+{
+  if (typeof(message.braceletId) == 'undefined') {
+    console.log('');
+    return;
+  }
+
+  // do lookup by bracelet and fill data array
+  var data = {};
+  data.braceletId = message.braceletId;
+  data.user = users[message.braceletId] || {};
+  
+  // emit new-subscribe message with bracelet and possible user info
+  io.emit('new-subscriber', data);
+};
 
 // load user list db woot
 getUsers();
@@ -405,12 +439,17 @@ redisSubClient.on("message", function(channel, message) {
     case 'embr:sl:finish':
       handleFinishMessage(message);
       break
+    case 'embr:sl:subscribe':
+      handleSubscribeMessage(message);
+    default:
+      break;
   }
 });
 
 // subscribe
 redisSubClient.subscribe('embr:sl:start');
 redisSubClient.subscribe('embr:sl:finish');
+redisSubClient.subscribe('embr:sl:subscribe');
 
 
 
