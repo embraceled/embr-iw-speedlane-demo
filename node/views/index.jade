@@ -28,11 +28,11 @@ block content
 
      .row.margin-top
       .col-md-6
-        form.form-horizontal(id='userForm', method='post', action='#')
+        form.form-horizontal(id='userForm', method='post', action='#', style="display: none;")
           .form-group
             label.col-sm-4.control-label Bracelet
             .col-sm-8
-              input.form-control(id="inputBracelet", type="text", name="input-bracelet", placeholder="Bracelet", disabled="disabled")
+              input.form-control(id="inputBracelet", type="text", name="input-bracelet", placeholder="Bracelet", readonly="readonly")
           .form-group
             label.col-sm-4.control-label First name
             .col-sm-8
@@ -45,7 +45,7 @@ block content
             label.col-sm-4.control-label Gender
             .col-sm-8
               select.form-control(id="inputGender", name="input-gender")
-                option(value="") -- 
+                option(value="") --
                 option(value="male") Male
                 option(value="female") Female
           .form-group

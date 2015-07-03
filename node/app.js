@@ -29,7 +29,7 @@ process.env.PORT = config.port || process.env.PORT;
 
 var redisUserList   = 'embr:sl:users';
 var redisScoreList  = 'embr:sl:scores';
-var redisFinishList = 'embr:sl:finished';
+var redisFinishedList = 'embr:sl:finished';
 
 // General purpose redis client
 var redisClient = redis.createClient(
@@ -128,9 +128,13 @@ io.on('connection', function(socket) {
   // socket.on('start', function(data) {
   //   startRace(data);
   // });
-  
+
   socket.on('reset-scores', function() {
     resetScores();
+  });
+
+  socket.on('upsert-user', function(data) {
+    upsertUser(data);
   });
 
   socket.on('disconnect', function() {
@@ -238,12 +242,32 @@ var msToSec = function(ms, fixedSize)
   }
 }
 
+var serializeArrayToObj = function(ser)
+{
+  var o = {};
+  ser.forEach(function(item) {
+    // strip input, - to _
+    item.name = item.name.replace(/input-/g, '').replace(/-/g, '_');
+
+    if (o[item.name] !== undefined) {
+      if (!o[item.name].push) {
+        o[item.name] = [o[item.name]];
+      }
+      o[item.name].push(item.value || '');
+    } else {
+      o[item.name] = item.value || '';
+    }
+  });
+  return o;
+};
+
+
 // Start race when countdown timer is done
 countDownTimer.on('time', function() {
-  console.log('countdown tick', countDownTimer.ms, msToSec(countDownTimer.ms));
-  
-  // only emit countdown time in client when race has not been started yet 
-  // and currentBracelet has a value 
+  // console.log('countdown tick', countDownTimer.ms, msToSec(countDownTimer.ms));
+
+  // only emit countdown time in client when race has not been started yet
+  // and currentBracelet has a value
   if ( ! raceStarted && currentBracelet) {
     io.emit('countdown-tick', msToSec(countDownTimer.ms));
   }
@@ -323,7 +347,7 @@ var handleStartMessage = function(message)
 var resetRace = function()
 {
   // kill bracelet mode
-  redisClient.publish(redisFinishList, 'KILL');
+  redisClient.publish(redisFinishedList, 'KILL');
 
   currentBracelet = null;
   raceStarted = false;
@@ -402,7 +426,7 @@ var finishRace = function()
   resetRace();
 };
 
-var handleSubscribeMessage = function(message)
+var handleSignupMessage = function(message)
 {
   if (typeof(message.braceletId) == 'undefined') {
     console.log('');
@@ -413,9 +437,28 @@ var handleSubscribeMessage = function(message)
   var data = {};
   data.braceletId = message.braceletId;
   data.user = users[message.braceletId] || {};
-  
-  // emit new-subscribe message with bracelet and possible user info
-  io.emit('new-subscriber', data);
+
+  // emit new-signup message with bracelet and possible user info
+  io.emit('new-signup', data);
+};
+
+var upsertUser = function(data)
+{
+  // convert to proper json obj
+  data = serializeArrayToObj(data);
+
+  // check if user exists
+  var user = users[data.bracelet] || {};
+
+  user.first_name = data.first_name;
+  user.last_name = data.last_name;
+  user.full_name = data.first_name + ' ' + data.last_name;
+  user.gender = data.gender;
+
+  users[data.bracelet] = user;
+
+  // update users in redis
+  redisClient.set(redisUserList, JSON.stringify(users));
 };
 
 // load user list db woot
@@ -439,8 +482,8 @@ redisSubClient.on("message", function(channel, message) {
     case 'embr:sl:finish':
       handleFinishMessage(message);
       break
-    case 'embr:sl:subscribe':
-      handleSubscribeMessage(message);
+    case 'embr:sl:signup':
+      handleSignupMessage(message);
     default:
       break;
   }
@@ -449,7 +492,7 @@ redisSubClient.on("message", function(channel, message) {
 // subscribe
 redisSubClient.subscribe('embr:sl:start');
 redisSubClient.subscribe('embr:sl:finish');
-redisSubClient.subscribe('embr:sl:subscribe');
+redisSubClient.subscribe('embr:sl:signup');
 
 
 

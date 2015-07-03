@@ -77,7 +77,7 @@ var IceWorld = function(socket)
   };
 
   self.resetCounterWindow = function()
-  { 
+  {
 
   };
 
@@ -366,11 +366,14 @@ var IceWorldUserUi = function(iceworld, socket)
   };
 
   self.resetForm = function()
-  { 
-    $inputBracelet.val('');
+  {
+    $inputBracelet.val('')
     $inputFirstName.val('');
     $inputLastName.val('');
     $inputGender.val('');
+
+    $userForm.find('div.form-group')
+      .removeClass('has-error');
   };
 
   self.setFormByUser = function(user)
@@ -380,7 +383,7 @@ var IceWorldUserUi = function(iceworld, socket)
     $inputGender.val(user.gender || '');
   };
 
-  self.handleNewSubscriber = function(data)
+  self.handleNewSignup = function(data)
   {
     self.resetForm();
 
@@ -390,6 +393,34 @@ var IceWorldUserUi = function(iceworld, socket)
     self.showForm();
   };
 
+  self.submitUserForm = function(e)
+  {
+    e.preventDefault();
+
+    var requiredMissing = false;
+    if ($inputFirstName.val() == '') {
+      requiredMissing = true;
+      $inputFirstName.closest('div.form-group')
+        .addClass('has-error');
+    }
+    if ($inputLastName.val() == '') {
+      requiredMissing = true;
+      $inputLastName.closest('div.form-group')
+        .addClass('has-error');
+    }
+
+    if (requiredMissing) {
+      return false;
+    }
+
+    // update or create user
+    socket.emit('upsert-user', $userForm.serializeArray());
+
+    self.resetForm();
+    self.hideForm();
+    return;
+  }
+
 
   /**
    * [initSocket description]
@@ -397,8 +428,8 @@ var IceWorldUserUi = function(iceworld, socket)
    */
   var initSocket = function()
   {
-    socket.on('new-subscriber', function(data) {
-      self.handleNewSubscriber(data);
+    socket.on('new-signup', function(data) {
+      self.handleNewSignup(data);
     });
   };
 
@@ -409,6 +440,8 @@ var IceWorldUserUi = function(iceworld, socket)
   var initUserForm = function()
   {
     $userForm = $('#userForm');
+    $userForm.on('submit', self.submitUserForm);
+
     // hide on start
     self.hideForm();
 
