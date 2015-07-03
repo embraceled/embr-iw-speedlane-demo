@@ -57,10 +57,10 @@ class Listener(threading.Thread):
         self.redis = r
         self.pubsub = self.redis.pubsub()
         self.pubsub.subscribe(channels)
-    
+
     def work(self, item):
         logger.info('Channel: %s and data: %s', item['channel'], item['data'])
-    
+
     def run(self):
         logger.debug('Starting redis subscribe thread')
         try:
@@ -153,7 +153,7 @@ class EmbrSlStart():
             if 'Embraceled' in self.read_chars:
                 if 'FF01' in self.read_chars:
                     logger.info('FF01 found')
-                    self.runStart()                    
+                    self.runStart()
         self.ser.close()
         time.sleep(1)
         it = it +1
@@ -172,7 +172,6 @@ class EmbrSlStart():
         # if like bracelet is being used
         logger.info('Starting')
 
-        logger.info(self.ser)
         self.client = Listener(self, redis.Redis(), [self.redisSubscribe])
         self.client.start()
 
