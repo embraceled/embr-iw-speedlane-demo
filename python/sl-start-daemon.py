@@ -68,7 +68,7 @@ class Listener(threading.Thread):
                 if item['channel'] == "embr:sl:finished" and item['data'] == "KILL":
                     logger.info('Killing race game')
                     for i in range(5):
-                        self.embr.ser.write("\x04\x03\x24\x02\x00")
+                        self.embr.ser.write("\x04\x03\x24\x00\x02\x00")
                         time.sleep(self.embr.sampleTime)
                 else:
                     self.work(item)
