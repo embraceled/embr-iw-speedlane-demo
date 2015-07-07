@@ -29,7 +29,7 @@ from serial.serialutil import SerialException
 POOL = redis.ConnectionPool(host='127.0.0.1', port=6379, db=0)
 
 # Setup proper logging
-LOG_FILENAME = '../log/embr-sl-start-daemon.log'
+LOG_FILENAME = '/home/pi/embr-iw-speedlane-demo/log/embr-sl-start-daemon.log'
 
 logger = logging.getLogger('EmbrSensorLogger')
 logger.setLevel(logging.INFO)
@@ -84,8 +84,8 @@ class EmbrSlStart():
     # Init
     def __init__(self, **redis_kwargs):
         self.stdin_path = '/dev/null'
-        self.stdout_path = '../log/embr-sl-start-daemon-out.log'
-        self.stderr_path = '../log/embr-sl-start-daemon-err.log'
+        self.stdout_path = '/home/pi/embr-iw-speedlane-demo/log/embr-sl-start-daemon-out.log'
+        self.stderr_path = '/home/pi/embr-iw-speedlane-demo/log/embr-sl-start-daemon-err.log'
         self.pidfile_path =  '/tmp/sensorStartDeamon.pid'
         self.pidfile_timeout = 5
 

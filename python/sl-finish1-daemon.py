@@ -27,7 +27,7 @@ from serial.serialutil import SerialException
 POOL = redis.ConnectionPool(host='127.0.0.1', port=6379, db=0)
 
 # Setup proper logging
-LOG_FILENAME = '../log/embr-sl-finish-daemon.log'
+LOG_FILENAME = '/home/pi/embr-iw-speedlane-demo/log/embr-sl-finish-daemon.log'
 
 logger = logging.getLogger('EbmrSensorLogger')
 logger.setLevel(logging.INFO)
@@ -52,8 +52,8 @@ class EmbrSlFinish1():
     # Init
     def __init__(self, **redis_kwargs):
         self.stdin_path = '/dev/null'
-        self.stdout_path = '../log/embr-sl-finish-daemon-out.log'
-        self.stderr_path = '../log/embr-sl-finish-daemon-err.log'
+        self.stdout_path = '/home/pi/embr-iw-speedlane-demo/log/embr-sl-finish-daemon-out.log'
+        self.stderr_path = '/home/pi/embr-iw-speedlane-demo/log/embr-sl-finish-daemon-err.log'
         self.pidfile_path = '/tmp/sensorFinishDeamon1.pid'
         self.pidfile_timeout = 5
 
