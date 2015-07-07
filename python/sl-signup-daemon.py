@@ -108,8 +108,8 @@ class EmbrSlStart():
             logger.info('00 %s', self.read_chars)
             if 'Embraceled' in self.read_chars:
                 # TODO Ralf correct number ?
-                if 'FF03' in self.read_chars:
-                    logger.info('FF03 found')
+                if 'FF04' in self.read_chars:
+                    logger.info('FF04 found')
                     self.runStart()
         self.ser.close()
         time.sleep(1)
@@ -141,7 +141,7 @@ class EmbrSlStart():
                     self.read_chars = self.ser.read(self.ser.inWaiting())
 
                     #check if valid and then get message.
-                    if self.read_chars[0]=='\x25':
+                    if self.read_chars[0]=='\x26':
                         ts = "%.0f" % time.time()
                         hex = ''
                         for aChar in range(1,5,1):
