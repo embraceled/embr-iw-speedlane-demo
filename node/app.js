@@ -158,7 +158,7 @@ var raceStarted = false;
 var raceInfo; // current user info
 
 // seeded users in static redis db
-var users = [];
+var users = {};
 
 // keep track of finished messages here, take average time
 var raceFinishedMessages = [];
@@ -171,7 +171,7 @@ var getUsers =  function() {
       res.send(500);
     }
 
-    users = JSON.parse(rs);
+    users = JSON.parse(rs) || {};
     // console.log(users);
   });
 };
@@ -199,6 +199,8 @@ var getScoreList = function(cb) {
       console.log(err);
       return;
     }
+
+    rs = rs || [];
 
     // it returns an array with strings.
     // convert to json objects
@@ -382,17 +384,22 @@ var handleFinishMessage = function(message)
   }
 
   console.log('finish message:');
+
   console.log(message);
 
   // for now just call finishRace.. here we should use a finish timer to check max time between finish message and get the average ms as time/score
 
+  // set finish time out
+  // reset if running
+
+  // move to timeout script
   finishRace();
 };
 
 // called after x amount of finish messages
 var finishRace = function()
 {
-  // stop timer hee
+  // stop timers here
   raceTimer.stop();
   outOfTimeTimer.stop();
 
@@ -400,6 +407,9 @@ var finishRace = function()
   console.log('time: ', raceTimer.ms);
   var finalTime = msToSec(raceTimer.ms, 2);
   console.log('final time: ', finalTime);
+
+  // reset finished messages
+  raceFinishedMessages = [];
 
   var score = {
     'user' : raceInfo,
