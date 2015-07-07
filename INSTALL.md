@@ -30,12 +30,18 @@ sudo npm install -g pm2 --unsafe-perm
 
 
 # fetch git repo in home
+git clone git@bitbucket.org:wecothi/embr-iw-speedlane-demo.git
 
-# cd embr-iw-speedlane-demo
+cd embr-iw-speedlane-demo
 
 # to install
 # cp init scripts to /etc/init.d + chmod +x
+sudo cp init/sl-daemon /etc/init.d
 
-# cd node
-# npm install
-# bower install
+# add sl-daemon to startup
+sudo update-rc.d sl-daemon defaults
+
+
+cd node
+npm install
+bower install

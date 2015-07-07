@@ -21,18 +21,18 @@ case "$1" in
   start)
     echo "Starting embr daemons"
     # run application you want to start
-    $HOME/embr-iw-speedlane-demo/python/sl-start-daemon.py start
-    $HOME/embr-iw-speedlane-demo/python/sl-finish1-daemon.py start
-    $HOME/embr-iw-speedlane-demo/python/sl-finish2-daemon.py start
-    $HOME/embr-iw-speedlane-demo/python/sl-signup-daemon.py start
+    /home/pi/embr-iw-speedlane-demo/python/sl-start-daemon.py start
+    /home/pi/embr-iw-speedlane-demo/python/sl-finish1-daemon.py start
+    /home/pi/embr-iw-speedlane-demo/python/sl-finish2-daemon.py start
+    /home/pi/embr-iw-speedlane-demo/python/sl-signup-daemon.py start
     ;;
   stop)
     echo "Stopping embr daemons"
     # kill application you want to stop
-    $HOME/embr-iw-speedlane-demo/python/sl-start-daemon.py stop
-    $HOME/embr-iw-speedlane-demo/python/sl-finish1-daemon.py stop
-    $HOME/embr-iw-speedlane-demo/python/sl-finish2-daemon.py stop
-    $HOME/embr-iw-speedlane-demo/python/sl-signup-daemon.py stop
+    /home/pi/embr-iw-speedlane-demo/python/sl-start-daemon.py stop
+    /home/pi/embr-iw-speedlane-demo/python/sl-finish1-daemon.py stop
+    /home/pi/embr-iw-speedlane-demo/python/sl-finish2-daemon.py stop
+    /home/pi/embr-iw-speedlane-demo/python/sl-signup-daemon.py stop
     ;;
   *)
     echo "Usage: /etc/init.d/sl-daemon {start|stop}"
