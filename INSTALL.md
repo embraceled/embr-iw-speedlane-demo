@@ -21,6 +21,8 @@ curl -sL https://deb.nodesource.com/setup | sudo bash -
 sudo apt-get install -y nodejs
 sudo apt-get install -y build-essential
 
+sudo apt-get install -y x11-xserver-utils
+
 # install bower
 sudo npm install -g bower
 
@@ -45,3 +47,15 @@ sudo update-rc.d sl-daemon defaults
 cd node
 npm install
 bower install
+
+# create pm2 list and daemon
+pm2 start app.js
+sudo pm2 startup
+
+
+sudo vi /etc/xdg/lxsession/LXDE/autostart
+
+@xset s off
+@xset -dpms
+@xset s noblank
+@epiphany http://localhost:3000
