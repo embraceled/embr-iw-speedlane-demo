@@ -193,8 +193,8 @@ var resetScores = function()
 // get current score list (last 10)
 var getScoreList = function(cb) {
   // get redis list of current scores
-  // redisClient.zrange(redisScoreList, 0, 10, 'withscores', function(err, rs) {
-  redisClient.zrange(redisScoreList, 0, 10, function(err, rs) {
+  // redisClient.zrange(redisScoreList, 0, 9, 'withscores', function(err, rs) {
+  redisClient.zrange(redisScoreList, 0, 9, function(err, rs) {
     if (err) {
       console.log(err);
       return;
