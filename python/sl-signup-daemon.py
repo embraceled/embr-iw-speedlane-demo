@@ -26,7 +26,7 @@ from serial.serialutil import SerialException
 POOL = redis.ConnectionPool(host='127.0.0.1', port=6379, db=0)
 
 # Setup proper logging
-LOG_FILENAME = '/var/log/embr-sl-signup-daemon.log'
+LOG_FILENAME = '../log/embr-sl-signup-daemon.log'
 
 logger = logging.getLogger('EmbrSignupLogger')
 logger.setLevel(logging.INFO)
@@ -52,8 +52,8 @@ class EmbrSlStart():
     # Init
     def __init__(self, **redis_kwargs):
         self.stdin_path = '/dev/null'
-        self.stdout_path = '/dev/tty' # '/var/log/embr-sl-signup-daemon-out.log'
-        self.stderr_path = '/dev/tty' # '/var/log/embr-sl-signup-daemon-err.log'
+        self.stdout_path = '../log/embr-sl-signup-daemon-out.log'
+        self.stderr_path = '../log/embr-sl-signup-daemon-err.log'
         self.pidfile_path =  '/tmp/sensorSignupDeamon.pid'
         self.pidfile_timeout = 5
 
@@ -152,7 +152,8 @@ class EmbrSlStart():
                         if hex != hex_old or round(time.time() - ts_old) > 5:
                             try:
                                 r = redis.Redis(connection_pool=POOL)
-                                r.publish(self.redisSignupKey,json.dumps({'braceletId':hex,'ts':ts}))
+                                logger.info('Signup message: %s', json.dumps({'braceletId':hex,'ts':ts}))
+                                r.publish(self.redisSignupKey, json.dumps({'braceletId':hex,'ts':ts}))
                                 hex_old = hex
                                 ts_old = time.time()
                             except redis.ConnectionError:

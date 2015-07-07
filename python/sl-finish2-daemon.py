@@ -27,7 +27,7 @@ from serial.serialutil import SerialException
 POOL = redis.ConnectionPool(host='127.0.0.1', port=6379, db=0)
 
 # Setup proper logging
-LOG_FILENAME = '/var/log/embr-sl-finish-daemon.log'
+LOG_FILENAME = '../log/embr-sl-finish-daemon.log'
 
 logger = logging.getLogger('EbmrSensorLogger')
 logger.setLevel(logging.INFO)
@@ -52,8 +52,8 @@ class EmbrSlFinish2():
     # Init
     def __init__(self, **redis_kwargs):
         self.stdin_path = '/dev/null'
-        self.stdout_path = '/dev/tty' # '/var/log/embr-sl-finish-daemon-out.log'
-        self.stderr_path = '/dev/tty' # '/var/log/embr-sl-finish-daemon-err.log'
+        self.stdout_path = '../log/embr-sl-finish-daemon-out.log'
+        self.stderr_path = '../log/embr-sl-finish-daemon-err.log'
         self.pidfile_path =  '/tmp/sensorFinishDeamon2.pid'
         self.pidfile_timeout = 5
 
@@ -152,7 +152,8 @@ class EmbrSlFinish2():
                         # only allow same hex once every 5 seconds
                         try:
                             r = redis.Redis(connection_pool=POOL)
-                            r.publish(self.redisKey,json.dumps({'braceletId':hex,'ts':ts}))
+                            logger.info('Finish2 message: %s', json.dumps({'braceletId':hex,'ts':ts}))
+                            r.publish(self.redisKey, json.dumps({'braceletId':hex,'ts':ts}))
                             hex_old = hex
                             ts_old = time.time()
                         except redis.ConnectionError:
