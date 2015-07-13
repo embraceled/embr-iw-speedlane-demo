@@ -37,6 +37,13 @@ var IceWorld = function(socket)
     self.showCountDown();
   };
 
+  self.handleStartRace = function()
+  {
+    console.log('beep?')
+    var ping = new Audio("/sounds/beep.wav");
+    ping.play();
+  };
+
   self.setUserInfo = function(data)
   {
     self.user = data;
@@ -241,6 +248,10 @@ var IceWorld = function(socket)
 
     socket.on('start', function(data) {
       self.handleStart(data);
+    });
+
+    socket.on('start-race', function(data) {
+      self.handleStartRace();
     });
 
     socket.on('update-scores', function(data) {

@@ -218,7 +218,7 @@ var getScoreList = function(cb) {
 
 
 // pre race countdown timer
-var countDownTimer = new Stopwatch(3400, {
+var countDownTimer = new Stopwatch(3600, {
   refreshRateMS: 100,
   almostDoneMS: 800
 });
@@ -370,6 +370,7 @@ var startRace = function()
   // start timer
   console.log('start race');
 
+  io.emit('start-race', 1);
   raceStarted = true;
   raceTimer.start();
   outOfTimeTimer.start();
