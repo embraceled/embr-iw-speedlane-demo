@@ -69,7 +69,7 @@ class Listener(threading.Thread):
                     logger.info('Killing race game')
                     for i in range(5):
                         self.embr.ser.write("\x04\x03\x24\x00\x02\x00")
-                        time.sleep(self.embr.sampleTime)
+                        time.sleep(self.embr.idResponseTime)
                 else:
                     self.work(item)
         except AttributeError:
