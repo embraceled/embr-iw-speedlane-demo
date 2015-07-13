@@ -39,9 +39,7 @@ var IceWorld = function(socket)
 
   self.handleStartRace = function()
   {
-    console.log('beep?')
-    var ping = new Audio("/sounds/beep.wav");
-    ping.play();
+    self.beep();
   };
 
   self.setUserInfo = function(data)
@@ -107,6 +105,10 @@ var IceWorld = function(socket)
 
   self.handleCountDownTick = function(data)
   {
+    var current = $counterTime.html() || 3;
+    if (current != data) {
+      self.beep();
+    }
     $counterTime.html(data);
   };
 
@@ -125,6 +127,12 @@ var IceWorld = function(socket)
     console.log('OUT OF TIME');
   };
 
+  self.beep = function()
+  {
+    console.log('beep?')
+    var ping = new Audio("/sounds/beep.wav");
+    ping.play();
+  }
 
   // /**
   //  * [showTimer description]

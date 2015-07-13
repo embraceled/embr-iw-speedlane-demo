@@ -218,7 +218,7 @@ var getScoreList = function(cb) {
 
 
 // pre race countdown timer
-var countDownTimer = new Stopwatch(3600, {
+var countDownTimer = new Stopwatch(3900, {
   refreshRateMS: 100,
   almostDoneMS: 800
 });
