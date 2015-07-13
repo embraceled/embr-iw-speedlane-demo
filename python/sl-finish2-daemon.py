@@ -96,17 +96,6 @@ class EmbrSlFinish2():
         try:
             tty = '/dev/ttyACM' + str(it)
             self.ser = serial.Serial(tty,timeout=1)
-            if (self.ser.isOpen() == False):
-                logger.info('port not open, trying it: %s: ' + str(it))
-                self.ser.open()
-                self.fireItUp(it)
-            else:
-                logger.info('port open on it: %s', str(it))
-                time.sleep(1)
-                it = it+1
-                if it >= 10:
-                    it = 0
-                self.setSerial(it)                
         except serial.serialutil.SerialException:
             logger.info('retry with it: %s', str(it))
             time.sleep(1)
@@ -114,10 +103,31 @@ class EmbrSlFinish2():
             if it >= 10:
                 it = 0
             self.setSerial(it)
-        #else:
-        #    logger.info('found proper port: %s', str(it))
-        #    self.fireItUp(it)
+        else:
+            logger.info('found proper port: %s', str(it))
+            self.fireItUp(it)
 
+        #try:
+        #    tty = '/dev/ttyACM' + str(it)
+        #    self.ser = serial.Serial(tty,timeout=1)
+        #    if (self.ser.isOpen() == False):
+        #        logger.info('port not open, trying it: %s: ' + str(it))
+        #        self.ser.open()
+        #        self.fireItUp(it)
+        #    else:
+        #        logger.info('port open on it: %s', str(it))
+        #        time.sleep(1)
+        #        it = it+1
+        #        if it >= 10:
+        #            it = 0
+        #        self.setSerial(it)                
+        #except serial.serialutil.SerialException:
+        #    logger.info('retry with it: %s', str(it))
+        #    time.sleep(1)
+        #    it = it+1
+        #    if it >= 10:
+        #        it = 0
+        #    self.setSerial(it)
 
 
     def fireItUp(self,it):
