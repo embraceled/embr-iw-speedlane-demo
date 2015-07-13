@@ -21,6 +21,7 @@ import serial
 import threading
 import signal
 import sys
+
 from daemon import runner
 from lockfile import LockTimeout
 from serial.serialutil import SerialException
@@ -118,6 +119,7 @@ class EmbrSlStart():
     def sigterm_handler(self, _signo, _stack_frame):
         # Raises SystemExit(0):
         logger.info('Stopping')
+        self.ser.close()
         self.client.shutdown_flag = True
         self.client.stop()
         self.client.join()
@@ -128,6 +130,17 @@ class EmbrSlStart():
         try:
             tty = '/dev/ttyACM' + str(it)
             self.ser = serial.Serial(tty,timeout=1)
+            if (self.ser.isOpen() == False):
+                logger.info('port not open, trying it: %s: ' + str(it))
+                self.ser.open()
+                self.fireItUp(it)
+            else:
+                logger.info('port open on it: %s', str(it))
+                time.sleep(1)
+                it = it+1
+                if it >= 10:
+                    it = 0
+                self.setSerial(it)                
         except serial.serialutil.SerialException:
             logger.info('retry with it: %s', str(it))
             time.sleep(1)
@@ -135,9 +148,9 @@ class EmbrSlStart():
             if it >= 10:
                 it = 0
             self.setSerial(it)
-        else:
-            logger.info('found proper port')
-            self.fireItUp(it)
+        #else:
+        #    logger.info('found proper port: %s', str(it))
+        #    self.fireItUp(it)
 
 
     def fireItUp(self,it):

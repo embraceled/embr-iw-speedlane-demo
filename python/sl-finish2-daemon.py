@@ -18,6 +18,8 @@ import json
 import redis
 import os
 import serial
+import signal
+import sys
 
 from daemon import runner
 from lockfile import LockTimeout
@@ -74,9 +76,19 @@ class EmbrSlFinish2():
 
 
     def run(self):
+        signal.signal(signal.SIGTERM, self.sigterm_handler)
+
         self.setSerial(0)
         #self.fireItUp(0)
-        logger.info('Starting Iceworld finish daemon')
+        logger.info('Starting Iceworld finish2 daemon')
+
+
+    # sigterm handler to properly kill redis thread
+    def sigterm_handler(self, _signo, _stack_frame):
+        # Raises SystemExit(0):
+        logger.info('Stopping')
+        self.ser.close()
+        sys.exit(0)
 
 
     def setSerial(self, it):
@@ -84,6 +96,17 @@ class EmbrSlFinish2():
         try:
             tty = '/dev/ttyACM' + str(it)
             self.ser = serial.Serial(tty,timeout=1)
+            if (self.ser.isOpen() == False):
+                logger.info('port not open, trying it: %s: ' + str(it))
+                self.ser.open()
+                self.fireItUp(it)
+            else:
+                logger.info('port open on it: %s', str(it))
+                time.sleep(1)
+                it = it+1
+                if it >= 10:
+                    it = 0
+                self.setSerial(it)                
         except serial.serialutil.SerialException:
             logger.info('retry with it: %s', str(it))
             time.sleep(1)
@@ -91,9 +114,10 @@ class EmbrSlFinish2():
             if it >= 10:
                 it = 0
             self.setSerial(it)
-        else:
-            logger.info('found proper port')
-            self.fireItUp(it)
+        #else:
+        #    logger.info('found proper port: %s', str(it))
+        #    self.fireItUp(it)
+
 
 
     def fireItUp(self,it):

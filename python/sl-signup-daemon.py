@@ -18,6 +18,9 @@ import json
 import redis
 import os
 import serial
+import signal
+import sys
+
 from daemon import runner
 from lockfile import LockTimeout
 from serial.serialutil import SerialException
@@ -76,14 +79,36 @@ class EmbrSlStart():
 
 
     def run(self):
+        signal.signal(signal.SIGTERM, self.sigterm_handler)
+
         self.setSerial(0)
-        logger.info('Starting Iceworld start daemon')
+        logger.info('Starting Iceworld signup daemon')
+
+
+    # sigterm handler to properly kill redis thread
+    def sigterm_handler(self, _signo, _stack_frame):
+        # Raises SystemExit(0):
+        logger.info('Stopping')
+        self.ser.close()
+        sys.exit(0)
+
 
     def setSerial(self, it):
         #get serial port 100% on ttyACM0 on clean boot but to help with debugging:
         try:
             tty = '/dev/ttyACM' + str(it)
             self.ser = serial.Serial(tty,timeout=1)
+            if (self.ser.isOpen() == False):
+                logger.info('port not open, trying it: %s: ' + str(it))
+                self.ser.open()
+                self.fireItUp(it)
+            else:
+                logger.info('port open on it: %s', str(it))
+                time.sleep(1)
+                it = it+1
+                if it >= 10:
+                    it = 0
+                self.setSerial(it)                
         except serial.serialutil.SerialException:
             logger.info('retry with it: %s', str(it))
             time.sleep(1)
@@ -91,9 +116,9 @@ class EmbrSlStart():
             if it >= 10:
                 it = 0
             self.setSerial(it)
-        else:
-            logger.info('found proper port')
-            self.fireItUp(it)
+        #else:
+        #    logger.info('found proper port: %s', str(it))
+        #    self.fireItUp(it)
 
 
     def fireItUp(self,it):
