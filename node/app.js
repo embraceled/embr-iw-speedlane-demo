@@ -29,7 +29,7 @@ process.env.PORT = config.port || process.env.PORT;
 
 var redisUserList   = 'embr:sl:users';
 var redisScoreList  = 'embr:sl:scores';
-var redisFinishList = 'embr:sl:finished';
+var redisFinishedList = 'embr:sl:finished';
 
 // General purpose redis client
 var redisClient = redis.createClient(
@@ -129,6 +129,14 @@ io.on('connection', function(socket) {
   //   startRace(data);
   // });
 
+  socket.on('reset-scores', function() {
+    resetScores();
+  });
+
+  socket.on('upsert-user', function(data) {
+    upsertUser(data);
+  });
+
   socket.on('disconnect', function() {
     // remove socket from rooms
     console.log('client disconnected');
@@ -150,7 +158,7 @@ var raceStarted = false;
 var raceInfo; // current user info
 
 // seeded users in static redis db
-var users = [];
+var users = {};
 
 // keep track of finished messages here, take average time
 var raceFinishedMessages = [];
@@ -163,19 +171,36 @@ var getUsers =  function() {
       res.send(500);
     }
 
-    users = JSON.parse(rs);
+    users = JSON.parse(rs) || {};
     // console.log(users);
   });
 };
 
-var getScoreList = function(cb) {
-  // get redis list of current scores
-  // redisClient.zrange(redisScoreList, 0, 10, 'withscores', function(err, rs) {
-  redisClient.zrange(redisScoreList, 0, 10, function(err, rs) {
+// clear all scores
+var resetScores = function()
+{
+  redisClient.del(redisScoreList, function(err, rs) {
     if (err) {
       console.log(err);
-      res.send(500);
+      return;
     }
+
+    // update scores on clients
+    io.emit('update-scores', []);
+  });
+};
+
+// get current score list (last 10)
+var getScoreList = function(cb) {
+  // get redis list of current scores
+  // redisClient.zrange(redisScoreList, 0, 9, 'withscores', function(err, rs) {
+  redisClient.zrange(redisScoreList, 0, 9, function(err, rs) {
+    if (err) {
+      console.log(err);
+      return;
+    }
+
+    rs = rs || [];
 
     // it returns an array with strings.
     // convert to json objects
@@ -193,8 +218,9 @@ var getScoreList = function(cb) {
 
 
 // pre race countdown timer
-var countDownTimer = new Stopwatch(3400, {
-  refreshRateMS: 100
+var countDownTimer = new Stopwatch(3900, {
+  refreshRateMS: 100,
+  almostDoneMS: 800
 });
 
 // race timer
@@ -218,26 +244,47 @@ var msToSec = function(ms, fixedSize)
   }
 }
 
+var serializeArrayToObj = function(ser)
+{
+  var o = {};
+  ser.forEach(function(item) {
+    // strip input, - to _
+    item.name = item.name.replace(/input-/g, '').replace(/-/g, '_');
+
+    if (o[item.name] !== undefined) {
+      if (!o[item.name].push) {
+        o[item.name] = [o[item.name]];
+      }
+      o[item.name].push(item.value || '');
+    } else {
+      o[item.name] = item.value || '';
+    }
+  });
+  return o;
+};
+
+
 // Start race when countdown timer is done
 countDownTimer.on('time', function() {
-  console.log('countdown tick', countDownTimer.ms, msToSec(countDownTimer.ms));
-  
-  // only emit countdown time in client when race has not been started yet 
-  // and currentBracelet has a value 
+  // console.log('countdown tick', countDownTimer.ms, msToSec(countDownTimer.ms));
+
+  // only emit countdown time in client when race has not been started yet
+  // and currentBracelet has a value
   if ( ! raceStarted && currentBracelet) {
     io.emit('countdown-tick', msToSec(countDownTimer.ms));
   }
 });
 
 // Start race when countdown timer is done
-countDownTimer.on('done', function() {
+// countDownTimer.on('done', function() {
+countDownTimer.on('almostdone', function() {
   console.log('countdown complete, starting race');
   startRace();
 });
 
 // tick every 100ms
 raceTimer.on('time', function() {
-  console.log('raceTimer tick', raceTimer.ms, msToSec(raceTimer.ms, 1));
+  // console.log('raceTimer tick', raceTimer.ms, msToSec(raceTimer.ms, 1));
 
   // only emit when race has been started
   if (raceStarted && currentBracelet) {
@@ -301,6 +348,9 @@ var handleStartMessage = function(message)
 
 var resetRace = function()
 {
+  // kill bracelet mode
+  redisClient.publish(redisFinishedList, 'KILL');
+
   currentBracelet = null;
   raceStarted = false;
   resetTimers();
@@ -320,6 +370,7 @@ var startRace = function()
   // start timer
   console.log('start race');
 
+  io.emit('start-race', 1);
   raceStarted = true;
   raceTimer.start();
   outOfTimeTimer.start();
@@ -334,20 +385,22 @@ var handleFinishMessage = function(message)
   }
 
   console.log('finish message:');
+
   console.log(message);
 
   // for now just call finishRace.. here we should use a finish timer to check max time between finish message and get the average ms as time/score
 
-  finishRace();
+  // set finish time out
+  // reset if running
 
-  // io.emit('finish', [{'user' : {'full_name' : 'Robert van Geerenstein'}, 'time' : 14}]);
-  // getScoreList(function() {io.emit('finish', rs)});
-}
+  // move to timeout script
+  finishRace();
+};
 
 // called after x amount of finish messages
 var finishRace = function()
 {
-  // stop timer hee
+  // stop timers here
   raceTimer.stop();
   outOfTimeTimer.stop();
 
@@ -355,6 +408,9 @@ var finishRace = function()
   console.log('time: ', raceTimer.ms);
   var finalTime = msToSec(raceTimer.ms, 2);
   console.log('final time: ', finalTime);
+
+  // reset finished messages
+  raceFinishedMessages = [];
 
   var score = {
     'user' : raceInfo,
@@ -377,12 +433,44 @@ var finishRace = function()
   // show final score to user
   io.emit('finish-time', finalTime);
 
-  redisClient.publish(redisFinishList, 'KILL');
-  
   // unset current bracelet
   resetRace();
-}
+};
 
+var handleSignupMessage = function(message)
+{
+  if (typeof(message.braceletId) == 'undefined') {
+    console.log('');
+    return;
+  }
+
+  // do lookup by bracelet and fill data array
+  var data = {};
+  data.braceletId = message.braceletId;
+  data.user = users[message.braceletId] || {};
+
+  // emit new-signup message with bracelet and possible user info
+  io.emit('new-signup', data);
+};
+
+var upsertUser = function(data)
+{
+  // convert to proper json obj
+  data = serializeArrayToObj(data);
+
+  // check if user exists
+  var user = users[data.bracelet] || {};
+
+  user.first_name = data.first_name;
+  user.last_name = data.last_name;
+  user.full_name = data.first_name + ' ' + data.last_name;
+  user.gender = data.gender;
+
+  users[data.bracelet] = user;
+
+  // update users in redis
+  redisClient.set(redisUserList, JSON.stringify(users));
+};
 
 // load user list db woot
 getUsers();
@@ -405,12 +493,17 @@ redisSubClient.on("message", function(channel, message) {
     case 'embr:sl:finish':
       handleFinishMessage(message);
       break
+    case 'embr:sl:signup':
+      handleSignupMessage(message);
+    default:
+      break;
   }
 });
 
 // subscribe
 redisSubClient.subscribe('embr:sl:start');
 redisSubClient.subscribe('embr:sl:finish');
+redisSubClient.subscribe('embr:sl:signup');
 
 
 

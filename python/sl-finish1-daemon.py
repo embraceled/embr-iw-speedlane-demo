@@ -18,6 +18,8 @@ import json
 import redis
 import os
 import serial
+import signal
+import sys
 
 from daemon import runner
 from lockfile import LockTimeout
@@ -27,7 +29,7 @@ from serial.serialutil import SerialException
 POOL = redis.ConnectionPool(host='127.0.0.1', port=6379, db=0)
 
 # Setup proper logging
-LOG_FILENAME = '/var/log/embr-sl-finish-daemon.log'
+LOG_FILENAME = '/home/pi/embr-iw-speedlane-demo/log/embr-sl-finish-daemon.log'
 
 logger = logging.getLogger('EbmrSensorLogger')
 logger.setLevel(logging.INFO)
@@ -52,9 +54,9 @@ class EmbrSlFinish1():
     # Init
     def __init__(self, **redis_kwargs):
         self.stdin_path = '/dev/null'
-        self.stdout_path = '/dev/tty' # '/var/log/embr-sl-finish-daemon-out.log'
-        self.stderr_path = '/dev/tty' # '/var/log/embr-sl-finish-daemon-err.log'
-        self.pidfile_path =  '/tmp/sensorFinishDeamon1.pid'
+        self.stdout_path = '/home/pi/embr-iw-speedlane-demo/log/embr-sl-finish-daemon-out.log'
+        self.stderr_path = '/home/pi/embr-iw-speedlane-demo/log/embr-sl-finish-daemon-err.log'
+        self.pidfile_path = '/tmp/sensorFinishDeamon1.pid'
         self.pidfile_timeout = 5
 
         #timers
@@ -74,9 +76,19 @@ class EmbrSlFinish1():
 
 
     def run(self):
+        signal.signal(signal.SIGTERM, self.sigterm_handler)
+
         self.setSerial(0)
         #self.fireItUp(0)
-        logger.info('Starting Iceworld finish daemon')
+        logger.info('Starting Iceworld finish1 daemon')
+
+
+    # sigterm handler to properly kill redis thread
+    def sigterm_handler(self, _signo, _stack_frame):
+        # Raises SystemExit(0):
+        logger.info('Stopping')
+        self.ser.close()
+        sys.exit(0)
 
 
     def setSerial(self, it):
@@ -92,8 +104,30 @@ class EmbrSlFinish1():
                 it = 0
             self.setSerial(it)
         else:
-            logger.info('found proper port')
+            logger.info('found proper port: %s', str(it))
             self.fireItUp(it)
+
+        #try:
+        #    tty = '/dev/ttyACM' + str(it)
+        #    self.ser = serial.Serial(tty,timeout=1)
+        #    if (self.ser.isOpen() == False):
+        #        logger.info('port not open, trying it: %s: ' + str(it))
+        #        self.ser.open()
+        #        self.fireItUp(it)
+        #    else:
+        #        logger.info('port open on it: %s', str(it))
+        #        time.sleep(1)
+        #        it = it+1
+        #        if it >= 10:
+        #            it = 0
+        #        self.setSerial(it)                
+        #except serial.serialutil.SerialException:
+        #    logger.info('retry with it: %s', str(it))
+        #    time.sleep(1)
+        #    it = it+1
+        #    if it >= 10:
+        #        it = 0
+        #    self.setSerial(it)
 
 
     def fireItUp(self,it):
@@ -151,6 +185,7 @@ class EmbrSlFinish1():
                         # only allow same hex once every 5 seconds
                         try:
                             r = redis.Redis(connection_pool=POOL)
+                            logger.info('Finish1 message: %s', json.dumps({'braceletId':hex,'ts':ts}))
                             r.publish(self.redisKey,json.dumps({'braceletId':hex,'ts':ts}))
                             hex_old = hex
                             ts_old = time.time()

@@ -3,6 +3,7 @@
 $(function() {
 
   var iceworld = new IceWorld(io());
+  var iceworldUser = new IceWorldUserUi(iceworld, io());
 
 });
 
@@ -36,6 +37,11 @@ var IceWorld = function(socket)
     self.showCountDown();
   };
 
+  self.handleStartRace = function()
+  {
+    self.beep();
+  };
+
   self.setUserInfo = function(data)
   {
     self.user = data;
@@ -66,6 +72,8 @@ var IceWorld = function(socket)
       console.log(data);
       $scores.append('<tr><td>' + (parseInt(i) + 1) + '</td><td>' + data[i].user.full_name + '</td><td>' + data[i].time + '</td></tr>');
     }
+
+    // TODO if empty show placeholder?
   }
 
   self.resetRace = function()
@@ -74,9 +82,14 @@ var IceWorld = function(socket)
   };
 
   self.resetCounterWindow = function()
-  { 
+  {
 
   };
+
+  self.resetScores = function()
+  {
+    socket.emit('reset-scores', 1);
+  }
 
   /**
    *
@@ -92,6 +105,10 @@ var IceWorld = function(socket)
 
   self.handleCountDownTick = function(data)
   {
+    var current = $counterTime.html() || 3;
+    if (current != data) {
+      self.beep();
+    }
     $counterTime.html(data);
   };
 
@@ -110,13 +127,12 @@ var IceWorld = function(socket)
     console.log('OUT OF TIME');
   };
 
-    socket.on('almost-out-of-time', function(data) {
-      self.handleAlmostOutOfTime(data);
-    });
-
-    socket.on('out-of-time', function(data) {
-      self.handleOutOfTime(data);
-    });
+  self.beep = function()
+  {
+    console.log('beep?')
+    var ping = new Audio("/sounds/beep.wav");
+    ping.play();
+  }
 
   // /**
   //  * [showTimer description]
@@ -242,12 +258,19 @@ var IceWorld = function(socket)
       self.handleStart(data);
     });
 
+    socket.on('start-race', function(data) {
+      self.handleStartRace();
+    });
+
+    socket.on('update-scores', function(data) {
+      self.updateScores(data);
+    });
+
     socket.on('countdown-tick', function(data) {
       self.handleCountDownTick(data);
     });
 
     socket.on('race-tick', function(data) {
-      console.log('race', data);
       self.handleRaceTick(data);
     });
 
@@ -327,6 +350,140 @@ var IceWorld = function(socket)
 
     // init user info
     initUserInfo();
+  }
+
+  self.init();
+}
+
+
+var IceWorldUserUi = function(iceworld, socket)
+{
+  var self = this;
+  var iceworld = iceworld;
+  var socket = socket;
+
+  var $resetBtn;
+
+  var $userForm;
+  var $inputBracelet;
+  var $inputFirstName;
+  var $inputLastName;
+  var $inputGender;
+
+  /**
+   * Form
+   */
+
+  self.showForm = function()
+  {
+    $userForm.show();
+  };
+
+  self.hideForm = function()
+  {
+    $userForm.hide();
+  };
+
+  self.resetForm = function()
+  {
+    $inputBracelet.val('')
+    $inputFirstName.val('');
+    $inputLastName.val('');
+    $inputGender.val('');
+
+    $userForm.find('div.form-group')
+      .removeClass('has-error');
+  };
+
+  self.setFormByUser = function(user)
+  {
+    $inputFirstName.val(user.first_name || '');
+    $inputLastName.val(user.last_name || '');
+    $inputGender.val(user.gender || '');
+  };
+
+  self.handleNewSignup = function(data)
+  {
+    self.resetForm();
+
+    $inputBracelet.val(data.braceletId);
+    self.setFormByUser(data.user);
+
+    self.showForm();
+  };
+
+  self.submitUserForm = function(e)
+  {
+    e.preventDefault();
+
+    var requiredMissing = false;
+    if ($inputFirstName.val() == '') {
+      requiredMissing = true;
+      $inputFirstName.closest('div.form-group')
+        .addClass('has-error');
+    }
+    if ($inputLastName.val() == '') {
+      requiredMissing = true;
+      $inputLastName.closest('div.form-group')
+        .addClass('has-error');
+    }
+
+    if (requiredMissing) {
+      return false;
+    }
+
+    // update or create user
+    socket.emit('upsert-user', $userForm.serializeArray());
+
+    self.resetForm();
+    self.hideForm();
+    return;
+  }
+
+
+  /**
+   * [initSocket description]
+   * @return {[type]} [description]
+   */
+  var initSocket = function()
+  {
+    socket.on('new-signup', function(data) {
+      self.handleNewSignup(data);
+    });
+  };
+
+  /**
+   * [initUserForm description]
+   * @return {[type]} [description]
+   */
+  var initUserForm = function()
+  {
+    $userForm = $('#userForm');
+    $userForm.on('submit', self.submitUserForm);
+
+    // hide on start
+    self.hideForm();
+
+    $inputBracelet  = $('#inputBracelet');
+    $inputFirstName = $('#inputFirstName');
+    $inputLastName  = $('#inputLastName');
+    $inputGender    = $('#inputGender');
+
+    $resetBtn = $('#resetBtn');
+    $resetBtn.on('click', iceworld.resetScores);
+  };
+
+  /**
+   * [init description]
+   * @return {[type]} [description]
+   */
+  self.init = function()
+  {
+    // init io
+    initSocket();
+
+    // init user info
+    initUserForm();
   }
 
   self.init();

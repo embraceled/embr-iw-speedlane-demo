@@ -18,7 +18,6 @@ import json
 import redis
 import os
 import serial
-import threading
 import signal
 import sys
 
@@ -30,9 +29,9 @@ from serial.serialutil import SerialException
 POOL = redis.ConnectionPool(host='127.0.0.1', port=6379, db=0)
 
 # Setup proper logging
-LOG_FILENAME = '/home/pi/embr-iw-speedlane-demo/log/embr-sl-start-daemon.log'
+LOG_FILENAME = '/home/pi/embr-iw-speedlane-demo/log/embr-sl-signup-daemon.log'
 
-logger = logging.getLogger('EmbrSensorLogger')
+logger = logging.getLogger('EmbrSignupLogger')
 logger.setLevel(logging.INFO)
 
 # create formatter
@@ -51,43 +50,14 @@ handler.setFormatter(formatter)
 # add handler to logger
 logger.addHandler(handler)
 
-class Listener(threading.Thread):
-    def __init__(self, embr, r, channels):
-        threading.Thread.__init__(self)
-        self.embr = embr
-        self.redis = r
-        self.pubsub = self.redis.pubsub()
-        self.pubsub.subscribe(channels)
-
-    def work(self, item):
-        logger.info('Channel: %s and data: %s', item['channel'], item['data'])
-
-    def run(self):
-        logger.debug('Starting redis subscribe thread')
-        try:
-            for item in self.pubsub.listen():
-                if item['channel'] == "embr:sl:finished" and item['data'] == "KILL":
-                    logger.info('Killing race game')
-                    for i in range(5):
-                        self.embr.ser.write("\x04\x03\x24\x00\x02\x00")
-                        time.sleep(self.embr.idResponseTime)
-                else:
-                    self.work(item)
-        except AttributeError:
-            logger.info('Listener attribute error')
-
-    def stop(self):
-        self.pubsub.unsubscribe()
-        logger.debug('Stopping redis subscribe thread')
-
 
 class EmbrSlStart():
     # Init
     def __init__(self, **redis_kwargs):
         self.stdin_path = '/dev/null'
-        self.stdout_path = '/home/pi/embr-iw-speedlane-demo/log/embr-sl-start-daemon-out.log'
-        self.stderr_path = '/home/pi/embr-iw-speedlane-demo/log/embr-sl-start-daemon-err.log'
-        self.pidfile_path =  '/tmp/sensorStartDeamon.pid'
+        self.stdout_path = '/home/pi/embr-iw-speedlane-demo/log/embr-sl-signup-daemon-out.log'
+        self.stderr_path = '/home/pi/embr-iw-speedlane-demo/log/embr-sl-signup-daemon-err.log'
+        self.pidfile_path =  '/tmp/sensorSignupDeamon.pid'
         self.pidfile_timeout = 5
 
         # timers
@@ -97,8 +67,7 @@ class EmbrSlStart():
         self.cycles = self.time/self.sampleTime  -1 # number of cycles wait
 
         # keys
-        self.redisKey = 'embr:sl:start'
-        self.redisSubscribe = 'embr:sl:finished'
+        self.redisSignupKey = 'embr:sl:signup'
 
         # app ident
         self.version = 'Rasberry Pi, Raspbian Embraceled Mod, v1.0.0' # TODO fetch this from image
@@ -113,16 +82,14 @@ class EmbrSlStart():
         signal.signal(signal.SIGTERM, self.sigterm_handler)
 
         self.setSerial(0)
-        logger.info('Starting Iceworld start daemon')
+        logger.info('Starting Iceworld signup daemon')
+
 
     # sigterm handler to properly kill redis thread
     def sigterm_handler(self, _signo, _stack_frame):
         # Raises SystemExit(0):
         logger.info('Stopping')
         self.ser.close()
-        self.client.shutdown_flag = True
-        self.client.stop()
-        self.client.join()
         sys.exit(0)
 
     def setSerial(self, it):
@@ -164,6 +131,7 @@ class EmbrSlStart():
         #    self.setSerial(it)
 
 
+
     def fireItUp(self,it):
         logger.info('startFireItUp')
         # get ident to set mode
@@ -175,8 +143,9 @@ class EmbrSlStart():
             self.read_chars = self.ser.read(self.ser.inWaiting())
             logger.info('00 %s', self.read_chars)
             if 'Embraceled' in self.read_chars:
-                if 'FF01' in self.read_chars:
-                    logger.info('FF01 found')
+                # TODO Ralf correct number ?
+                if 'FF04' in self.read_chars:
+                    logger.info('FF04 found')
                     self.runStart()
         self.ser.close()
         time.sleep(1)
@@ -196,9 +165,6 @@ class EmbrSlStart():
         # if like bracelet is being used
         logger.info('Starting')
 
-        self.client = Listener(self, redis.Redis(), [self.redisSubscribe])
-        self.client.start()
-
         # initial values for duplicate like check
         hex_old = 'o'
         ts_old = time.time()
@@ -211,7 +177,7 @@ class EmbrSlStart():
                     self.read_chars = self.ser.read(self.ser.inWaiting())
 
                     #check if valid and then get message.
-                    if self.read_chars[0]=='\x25':
+                    if self.read_chars[0]=='\x26':
                         ts = "%.0f" % time.time()
                         hex = ''
                         for aChar in range(1,5,1):
@@ -222,8 +188,8 @@ class EmbrSlStart():
                         if hex != hex_old or round(time.time() - ts_old) > 5:
                             try:
                                 r = redis.Redis(connection_pool=POOL)
-                                logger.info('Start message: %s', json.dumps({'braceletId':hex,'ts':ts}))
-                                r.publish(self.redisKey, json.dumps({'braceletId':hex,'ts':ts}))
+                                logger.info('Signup message: %s', json.dumps({'braceletId':hex,'ts':ts}))
+                                r.publish(self.redisSignupKey, json.dumps({'braceletId':hex,'ts':ts}))
                                 hex_old = hex
                                 ts_old = time.time()
                             except redis.ConnectionError:
