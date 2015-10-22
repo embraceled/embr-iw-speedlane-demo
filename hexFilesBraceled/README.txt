@@ -17,8 +17,14 @@ De parameters zijn redelijk vanzelfsprekend. (als je wil weten wat je moet invul
 TODO : Deze scriptjes omzetten naar java code.
 ----------------------------------------------------------------------------------------------------------------------------------
 
-writeSequentialProfile
+WriteSequentialProfile
   compilen 
-    javac -cp ./:lib/jssc-2.8.0.jar writeSequentialProfile.java
+    javac -cp ./:lib/jssc-2.8.0.jar WriteSequentialProfile.java
   runnen
-    java -cp ./:lib/jssc-2.8.0.jar writeSequentialProfile
+    java -cp ./:lib/jssc-2.8.0.jar WriteSequentialProfile
+
+WriteProfileGameConfigUpdate
+  compilen 
+    javac -cp ./:lib/jssc-2.8.0.jar WriteProfileGameConfigUpdate.java
+  runnen
+    java -cp ./:lib/jssc-2.8.0.jar WriteProfileGameConfigUpdate
