@@ -15,3 +15,10 @@ writeprofilegameconfigupdate.m schrijft een profiel naar een join bandje.
 De parameters zijn redelijk vanzelfsprekend. (als je wil weten wat je moet invullen zie wiki).
 
 TODO : Deze scriptjes omzetten naar java code.
+----------------------------------------------------------------------------------------------------------------------------------
+
+writeSequentialProfile
+  compilen 
+    javac -cp ./:lib/jssc-2.8.0.jar writeSequentialProfile.java
+  runnen
+    java -cp ./:lib/jssc-2.8.0.jar writeSequentialProfile

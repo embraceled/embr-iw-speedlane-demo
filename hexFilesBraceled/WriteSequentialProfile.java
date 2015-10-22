@@ -1,3 +1,4 @@
+
 import java.nio.charset.Charset;
 
 import jssc.SerialPort;
@@ -12,16 +13,16 @@ public class WriteSequentialProfile {
 	public static final int PARITY = SerialPort.PARITY_NONE;
 	public static final int FLOWCONTROL = SerialPort.FLOWCONTROL_NONE;
 	
-	private String eventID = "343CDD";
-	private String deviceID = "00000030";
-	private String deviceType = "01";
-	private String contentId = "00";
-//	accesstoggles= bin2dec('111111000');
-//	colors=[0,1,2,3,4,5,6,7,8];
-	private String age = "00";
-	private String sex = "00";
-//	groupDepth=bin2dec('00001111');
-//	credits=bin2dec('00011111');
+	private static String eventID = "343CDD"; // dec=3423453
+	private static String deviceID = "00000030";
+	private static String deviceType = "0001";
+	private static String contentId = "0000";
+	private static String accesstoggles = "1F8"; // bin=111111000 dec=504
+	private static String colors = "012345678";
+	private static String age = "000000";
+	private static String sex = "00";
+	private static String groupDepth = "0F"; // bin=00001111 dec=15
+	private static String credits = "1F"; // bin=00011111 dec=31
 	
 	public static void main(String[] args) {
 		for(String portItem: SerialPortList.getPortNames()){
@@ -30,19 +31,49 @@ public class WriteSequentialProfile {
 		
 //		String name = null;
 //		String name = "COM7";
-		String name = "/dev/tty.usbmodem89";
+		String name = "/dev/tty.usbmodem00000001";
 		
 		if(name != null){
 			SerialPort sp = createSerialObject(new SerialPort(name));
 			
-			String[] byteArray = new String[256];
-			for(int i = 0; i < 256; i++){
-				byteArray[i] = "F";
-			}
-			printByteArray(byteArray);
+			String[] byteArray = fillProfileByteArray();
 			
 			writeProfile(byteArray, sp);
 		}
+	}
+
+	public static String[] fillProfileByteArray() {
+		String[] byteArray = new String[256];
+		for(int i = 0; i < 256; i++){
+			byteArray[i] = "F";
+		}
+		printByteArray(byteArray);
+		
+//			blockfill2(1:8)=dec2hex(deviceID,8);
+		createProfileByteArray(byteArray, 0, deviceID.length(), deviceID);
+//			blockfill2(9:12)=dec2hex(deviceType,4);
+		createProfileByteArray(byteArray, 8, deviceType.length(), deviceType);
+//			blockfill2(13:16)=dec2hex(contentId,4);
+		createProfileByteArray(byteArray, 12, contentId.length(), contentId);
+//			blockfill2(17:22)=dec2hex(age,6);
+		createProfileByteArray(byteArray, 16, age.length(), age);
+//			blockfill2(23:24)=dec2hex(sex,2);
+		createProfileByteArray(byteArray, 22, sex.length(), sex);
+		
+		createProfileByteArray(byteArray, 32, "502200015D4C000166".length(), "502200015D4C000166");
+
+//			blockfill2(13:14)=dec2hex(credits,2);
+		createProfileByteArray(byteArray, (7*32)+12, credits.length(), credits);
+//			blockfill2(15:20)=dec2hex(eventID,6);
+		createProfileByteArray(byteArray, (7*32)+14, eventID.length(), eventID);
+//			blockfill2(21:23)=dec2hex(accesstoggles,3);
+		createProfileByteArray(byteArray, (7*32)+20, accesstoggles.length(), accesstoggles);
+//			blockfill2(24:32)=(dec2hex(colors))';
+			createProfileByteArray(byteArray, (7*32)+23, colors.length(), colors);
+		
+		printByteArray(byteArray);
+		
+		return byteArray;
 	}
 	
 	private static void writeProfile(String[] byteArray, SerialPort serialPort) {
@@ -118,6 +149,21 @@ public class WriteSequentialProfile {
 			return null;
 		}
 		return sp;
+	}
+	
+	private static String[] createProfileByteArray(String[] byteArray, int start, int length, String data) {
+		int n = 0;
+		for(int i = start; i < (start + length); i++){
+			char c = 0;
+			try{
+				c = data.charAt(n);
+			} catch(IndexOutOfBoundsException e){
+				c = 70;
+			}
+			byteArray[i] = "" + c;
+			n++;
+		}
+		return byteArray;
 	}
 
 }
