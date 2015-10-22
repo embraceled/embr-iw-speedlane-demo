@@ -85,11 +85,13 @@ public class WriteSequentialProfile {
 			serialPort.writeBytes("er".getBytes(Charset.forName("UTF-8")));
 			System.out.println("Ram erase");
 			
+			Thread.sleep(150);
+			
 			// Flash erase
 			serialPort.writeBytes("ef".getBytes(Charset.forName("UTF-8")));
 			System.out.println("Flash Erase");
 			
-			Thread.sleep(50);
+			Thread.sleep(150);
 			
 			serialPort.writeBytes("l".getBytes(Charset.forName("UTF-8")));
 			System.out.println("Enable ram buffer for writing.");

@@ -18,19 +18,18 @@ public class WriteProfileGameConfigUpdate {
 	private static String colors = "012345678";
 	private static String credits = "1F"; // bin=00011111 dec=31
 	
-	private static String gameType = "0002";
-	private static String gameTime = "28"; // gametime dec=40
+	private static String gameType = "0001";
+//	private static String gameTime = "FF"; // gametime dec=40
+	private static String gameTime = "14"; // gametime dec=20
 	private static String gameArg1 = "03";  // color tagee dec=3
 	private static String gameArg2 = "04";  // color tag7er dec=4
 	private static String gameArg3 = "01";  // immunity time dec=1
 	private static String gameArg4 = "07";  // tagPower dec=7
-	private static String gameArg5 = "01";  // tagType dec=1
+	private static String gameArg5 = "00";  // tagType dec=1
 	private static String gameArg6 = "00";  // reserved dec=0
 	private static String gameArg7 = "00";  // reserved dec=0
 	private static String gameArg8 = "00";  // reserved dec=0
 	private static String gameArg9 = "00";  // reserved dec=0
-	
-	
 	
 	public static void main(String[] args) {
 		for(String portItem: SerialPortList.getPortNames()){
@@ -105,11 +104,13 @@ public class WriteProfileGameConfigUpdate {
 			serialPort.writeBytes("er".getBytes(Charset.forName("UTF-8")));
 			System.out.println("Ram erase");
 			
+			Thread.sleep(150);
+			
 			// Flash erase
 			serialPort.writeBytes("ef".getBytes(Charset.forName("UTF-8")));
 			System.out.println("Flash Erase");
 			
-			Thread.sleep(50);
+			Thread.sleep(150);
 			
 			serialPort.writeBytes("l".getBytes(Charset.forName("UTF-8")));
 			System.out.println("Enable ram buffer for writing.");
