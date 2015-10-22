@@ -5,7 +5,7 @@ import jssc.SerialPort;
 import jssc.SerialPortException;
 import jssc.SerialPortList;
 
-public class WriteSequentialProfile {
+public class WriteProfileGameConfigUpdate {
 
 	public static final int BAUDRATE = 38400;
 	public static final int DATABITS = SerialPort.DATABITS_8;
@@ -14,15 +14,23 @@ public class WriteSequentialProfile {
 	public static final int FLOWCONTROL = SerialPort.FLOWCONTROL_NONE;
 	
 	private static String eventID = "343CDD"; // dec=3423453
-	private static String deviceID = "00000030";
-	private static String deviceType = "0001";
-	private static String contentId = "0000";
 	private static String accesstoggles = "1F8"; // bin=111111000 dec=504
 	private static String colors = "012345678";
-	private static String age = "000000";
-	private static String sex = "00";
-	private static String groupDepth = "0F"; // bin=00001111 dec=15
 	private static String credits = "1F"; // bin=00011111 dec=31
+	
+	private static String gameType = "0002";
+	private static String gameTime = "28"; // gametime dec=40
+	private static String gameArg1 = "03";  // color tagee dec=3
+	private static String gameArg2 = "04";  // color tag7er dec=4
+	private static String gameArg3 = "01";  // immunity time dec=1
+	private static String gameArg4 = "07";  // tagPower dec=7
+	private static String gameArg5 = "01";  // tagType dec=1
+	private static String gameArg6 = "00";  // reserved dec=0
+	private static String gameArg7 = "00";  // reserved dec=0
+	private static String gameArg8 = "00";  // reserved dec=0
+	private static String gameArg9 = "00";  // reserved dec=0
+	
+	
 	
 	public static void main(String[] args) {
 		for(String portItem: SerialPortList.getPortNames()){
@@ -49,16 +57,28 @@ public class WriteSequentialProfile {
 		}
 		printByteArray(byteArray);
 		
-//			blockfill2(1:8)=dec2hex(deviceID,8);
-		createProfileByteArray(byteArray, 0, deviceID.length(), deviceID);
-//			blockfill2(9:12)=dec2hex(deviceType,4);
-		createProfileByteArray(byteArray, 8, deviceType.length(), deviceType);
-//			blockfill2(13:16)=dec2hex(contentId,4);
-		createProfileByteArray(byteArray, 12, contentId.length(), contentId);
-//			blockfill2(17:22)=dec2hex(age,6);
-		createProfileByteArray(byteArray, 16, age.length(), age);
-//			blockfill2(23:24)=dec2hex(sex,2);
-		createProfileByteArray(byteArray, 22, sex.length(), sex);
+//		blockfill2(1:4)=dec2hex(gameType,4);
+		createProfileByteArray(byteArray, 0, gameType.length(), gameType);
+//		blockfill2(5:6)=dec2hex(gameTime,2);
+		createProfileByteArray(byteArray, 4, gameTime.length(), gameTime);
+//		blockfill2(7:8)=dec2hex(gameArg1,2);
+		createProfileByteArray(byteArray, 6, gameArg1.length(), gameArg1);
+//		blockfill2(9:10)=dec2hex(gameArg2,2);
+		createProfileByteArray(byteArray, 8, gameArg2.length(), gameArg2);
+//		blockfill2(11:12)=dec2hex(gameArg3,2);
+		createProfileByteArray(byteArray, 10, gameArg3.length(), gameArg3);
+//		blockfill2(13:14)=dec2hex(gameArg4,2);
+		createProfileByteArray(byteArray, 12, gameArg4.length(), gameArg4);
+//		blockfill2(15:16)=dec2hex(gameArg5,2);
+		createProfileByteArray(byteArray, 14, gameArg5.length(), gameArg5);
+//		blockfill2(17:18)=dec2hex(gameArg6,2);
+		createProfileByteArray(byteArray, 16, gameArg6.length(), gameArg6);
+//		blockfill2(19:20)=dec2hex(gameArg7,2);
+		createProfileByteArray(byteArray, 18, gameArg7.length(), gameArg7);
+//		blockfill2(21:22)=dec2hex(gameArg8,2);
+		createProfileByteArray(byteArray, 20, gameArg8.length(), gameArg8);
+//		blockfill2(23:24)=dec2hex(gameArg9,2);
+		createProfileByteArray(byteArray, 22, gameArg9.length(), gameArg9);
 		
 		createProfileByteArray(byteArray, 24, "150A0001".length(), "150A0001");
 		
